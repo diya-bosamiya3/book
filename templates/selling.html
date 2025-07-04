@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sell Old Book{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'book_app/selling.css' %}">
+{% endblock extra_css %}
+
+{% block body %}
+<div class="container">
+    <h2>Sell Your Old Book</h2>
+    <form action="{% url 'selling' %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+        <label for="email">Your Email:</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+        <label for="phone">Phone Number:</label>
+        <input type="tel" id="phone" name="phone" placeholder="Your phone number" required>
+
+        <label for="title">Book Title:</label>
+<input type="text" id="title" name="title" placeholder="Title of the book" required>
+
+        <label for="author">Author:</label>
+        <input type="text" id="author" name="author" placeholder="Author of the book" required>
+
+        <label for="condition">Book Condition:</label>
+        <select id="condition" name="condition" required>
+            <option value="" disabled selected>Select Condition</option>
+            <option value="New">New</option>
+            <option value="Like New">Like New</option>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option> 
+            <option value="Used">Used</option>
+        </select>
+
+        <label for="price">Your Asking Price (INR):</label>
+        <input type="number" id="price" name="price" placeholder="Expected price" required>
+
+        <!-- ✅ Added file input -->
+        <label for="book_photo">Upload Book Photo:</label>
+        <input type="file" id="photo" name="photo" accept="image/*" required>
+
+        <label for="description">Description (Optional):</label>
+        <textarea id="description" name="description" placeholder="Additional details about the book..." rows="4"></textarea>
+
+    <button type="submit">Submit</button>
+
+</form>
+</div>
+{% endblock body %}

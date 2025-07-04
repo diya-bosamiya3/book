@@ -1,0 +1,130 @@
+  body {
+    background-color: #f9f9f9;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .carousel-item img {
+    object-fit: cover;
+    height: 550px;
+    filter: brightness(0.8);
+  }
+  .carousel-caption {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    border-radius: 12px;
+    text-shadow: 1px 1px 2px #000;
+  }
+.hero {
+  background: url("{% static 'book_app/banner.jpg' %}") no-repeat center center/cover;
+  padding: 40px 0;
+  padding-top: 0%;
+  text-align: center;
+  position: relative;
+}
+
+.hero-content {
+  animation: fadeInUp 1s ease forwards;
+  padding-top: 0%;
+}
+
+/* Darker text color */
+.animate-title {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: #222; /* Darker font color */
+  opacity: 0;
+  animation: fadeInUp 1s 0.2s forwards;
+}
+
+.animate-subtitle {
+  font-size: 1.3rem;
+  color: #333; /* Dark gray for subtitle */
+  margin: 10px 0 30px;
+  opacity: 0;
+  animation: fadeInUp 1s 0.4s forwards;
+}
+
+.btn-animated {
+  opacity: 0;
+  animation: fadeInUp 1s 0.6s forwards;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-animated:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* Fade-in-up animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+  .hero h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+  .hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+  .hero .btn {
+    margin: 0 8px;
+  }
+  h1.section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin: 60px 0 60px;
+    padding-top: 0%;
+    color: #333;
+  }
+  .book-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+    background: #fff;
+  }
+  .book-card:hover {
+    transform: translateY(-5px);
+  }
+  .book-card img {
+    height: 350px;
+    width: 100%;
+    object-fit: cover;
+  }
+  .book-card-body {
+    padding: 1rem;
+  }
+  .book-card-body h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .book-card-body p {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 2px 0;
+  }
+  .footer {
+    background: #343a40;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+    margin-top: 40px;
+  }
+  /* Smooth scale-in */
+.modal.fade .modal-dialog {
+  transform: scale(0.9);
+  opacity: 0;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+.modal.show .modal-dialog {
+  transform: scale(1);
+  opacity: 1;
+}

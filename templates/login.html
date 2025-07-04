@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login Page</title>
+  <link rel="stylesheet" href="{% static 'book_app/login.css' %}"></link>
+</head>
+<body>
+  <div class="container">
+    <div class="login-left">
+      <img src="{% static 'book_app\img1.jpg' %}" alt="Login Illustration">
+    </div>
+    <div class="login-right">
+      <h2>WELCOME BACK</h2>
+      <h3>LOGIN PAGE</h3>
+      <form onsubmit="return validateForm()" method="post" action="">
+  {% csrf_token %}
+
+  <div class="input-group">
+    <span class="icon">👤</span>
+    <input type="text" id="username" name="username" placeholder="Enter username" required>
+  </div>
+  {% if messages %}
+  {% for message in messages %}
+    <div class="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+  <div class="input-group">
+    <span class="icon">🔒</span>
+    <input type="password" id="password" name="password" placeholder="••••••••" required>
+  </div>
+  <div class="forgot">
+    <a href="#">Forgot password?</a>
+  </div>
+  <button type="submit">SIGN IN</button>
+  <p class="create-account">DON'T HAVE AN ACCOUNT? <a href="{% url 'newacc' %}">CREATE AN ACCOUNT</a></p>
+</form>
+
+    </div>
+  </div>
+  <script src="{% static 'book_app/login.js' %}"></script>
+</body>
+</html>

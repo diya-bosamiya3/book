@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+ <title>{% block title %}Services{% endblock title %}</title>
+
+  {% load static %}
+  {% block extra_css %}
+  <link rel="stylesheet" href="{% static 'book_app/services.css'%}" />
+  {% endblock extra_css %}
+ {% block body %}
+ <!-- Features Section -->
+<section class="container my-5">
+  <div class="text-center mb-5">
+    <h2 class="fw-bold">Why Choose Us?</h2>
+    <p class="text-muted">We make book selling and buying simple, secure, and valuable.</p>
+  </div>
+  <div class="row text-center g-4">
+    <div class="col-md-4 col-sm-6 feature-box">
+      <div class="feature-card p-4 shadow-sm rounded">
+        <i class="bi bi-cash-stack display-6 text-primary"></i>
+        <h5 class="mt-3">Earn Money</h5>
+        <p>Turn your bookshelf into earnings by selling unused books.</p>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-6 feature-box">
+      <div class="feature-card p-4 shadow-sm rounded">
+        <i class="bi bi-book display-6 text-success"></i>
+        <h5 class="mt-3">Affordable Reads</h5>
+        <p>Buy used books at a fraction of their original price.</p>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-6 feature-box">
+      <div class="feature-card p-4 shadow-sm rounded">
+        <i class="bi bi-hand-thumbs-up display-6 text-info"></i>
+        <h5 class="mt-3">Trustworthy</h5>
+        <p>All listings are reviewed and verified by our team.</p>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-6 feature-box">
+      <div class="feature-card p-4 shadow-sm rounded">
+        <i class="bi bi-box-arrow-in-down display-6 text-warning"></i>
+        <h5 class="mt-3">Easy Upload</h5>
+        <p>Post your book for sale in just a few clicks with images.</p>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-6 feature-box">
+      <div class="feature-card p-4 shadow-sm rounded">
+        <i class="bi bi-globe2 display-6 text-danger"></i>
+        <h5 class="mt-3">Wide Reach</h5>
+        <p>Reach thousands of students and book lovers across India.</p>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-6 feature-box">
+      <div class="feature-card p-4 shadow-sm rounded">
+        <i class="bi bi-clock-history display-6 text-secondary"></i>
+        <h5 class="mt-3">24/7 Platform</h5>
+        <p>List, browse, and connect anytime at your convenience.</p>
+      </div>
+    </div>
+  </div>
+</section>
+ {% endblock body %}
+

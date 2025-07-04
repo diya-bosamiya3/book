@@ -1,0 +1,64 @@
+/* General section styles */
+section.container {
+  padding: 60px 20px;
+  background-color: #fafafa;
+  border-radius: 12px;
+}
+
+/* Heading styles */
+section.container h2 {
+  font-size: 2.2rem;
+  color: #222;
+}
+
+section.container p.text-muted {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+/* Feature box/card */
+.feature-box {
+  transition: transform 0.3s ease;
+}
+
+.feature-card {
+  background: #ffffff;
+  border: none;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Icon styles */
+.feature-card i {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Card hover effects */
+.feature-box:hover .feature-card {
+  background-color: #f0f8ff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  transform: translateY(-8px);
+}
+
+/* Heading inside cards */
+.feature-card h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 0.5rem;
+}
+
+/* Text inside cards */
+.feature-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}

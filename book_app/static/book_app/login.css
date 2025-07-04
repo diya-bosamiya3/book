@@ -1,0 +1,102 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f9f9f9;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-left {
+  background: #fef4e9;
+  padding: 40px;
+}
+
+.login-left img {
+  max-width: 400px;
+  height: auto;
+}
+
+.login-right {
+  background: white;
+  border-radius: 25px;
+  padding: 50px 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+}
+
+.login-right h2 {
+  margin: 0;
+  font-weight: normal;
+  color: #333;
+  font-size: 24px;
+}
+
+.login-right h3 {
+  margin-top: 5px;
+  font-weight: bold;
+  color: #5f3dc4;
+  font-size: 20px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-top: 25px;
+  background: #f3f3f3;
+  border-radius: 30px;
+  padding: 12px 18px;
+}
+
+.input-group .icon {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.input-group input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-size: 16px;
+}
+
+.forgot {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.forgot a {
+  color: #999;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(to right, #5f3dc4, #fcb045);
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.create-account {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.create-account a {
+  color: #5f3dc4;
+  text-decoration: none;
+  font-weight: bold;
+}
