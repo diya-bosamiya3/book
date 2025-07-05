@@ -90,7 +90,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Book Detail Modal -->
 <div class="modal fade" id="bookDetailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
@@ -106,7 +106,7 @@
             <p><strong>Price:</strong> ₹<span id="modalBookPrice"></span></p>
             <p><strong>Condition:</strong> <span id="modalBookCondition"></span></p>
             <p><strong>Description:</strong> <span id="modalBookDescription"></span></p>
-            <a class="btn btn-success btn-lg mt-4 w-100" href="{% url 'payment' %}">Buy Now</a>
+            <a href="{% url 'payment'%}" class="btn btn-success btn-lg mt-4 w-100 open-payment" data-title="" data-price="">Buy Now</a>
           </div>
         </div>
       </div>
@@ -114,26 +114,56 @@
   </div>
 </div>
 
+
+
 <!-- Footer -->
 <footer class="footer text-center py-4 bg-dark text-white">
   <p>&copy; 2025 Book Bazaar. All rights reserved.</p>
 </footer>
 
-<!-- JS -->
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const bookCards = document.querySelectorAll('.book-card');
+  const bookDetailModal = document.getElementById('bookDetailModal');
+  const openPaymentBtn = document.querySelector('.open-payment');
+  const paymentModal = document.getElementById('paymentModal');
+  const closeModal = document.getElementById('closeModal');
+
   bookCards.forEach(card => {
     card.addEventListener('click', () => {
-      document.getElementById('modalBookTitle').textContent = card.dataset.title;
-      document.getElementById('modalBookAuthor').textContent = card.dataset.author;
-      document.getElementById('modalBookPrice').textContent = card.dataset.price;
-      document.getElementById('modalBookCondition').textContent = card.dataset.condition;
-      document.getElementById('modalBookDescription').textContent = card.dataset.description;
-      document.getElementById('modalBookImg').src = card.dataset.img;
-      new bootstrap.Modal(document.getElementById('bookDetailModal')).show();
+      const title = card.dataset.title;
+      const author = card.dataset.author;
+      const price = card.dataset.price;
+      const condition = card.dataset.condition;
+      const description = card.dataset.description;
+      const img = card.dataset.img;
+
+      document.getElementById('modalBookTitle').textContent = title;
+      document.getElementById('modalBookAuthor').textContent = author;
+      document.getElementById('modalBookPrice').textContent = price;
+      document.getElementById('modalBookCondition').textContent = condition;
+      document.getElementById('modalBookDescription').textContent = description;
+      document.getElementById('modalBookImg').src = img;
+
+      openPaymentBtn.dataset.title = title;
+      openPaymentBtn.dataset.price = price;
+
+      new bootstrap.Modal(bookDetailModal).show();
     });
+  });
+
+  openPaymentBtn.addEventListener('click', function(event) {
+    event.preventDefault();
+
+    document.getElementById('paymentBookTitle').textContent = openPaymentBtn.dataset.title;
+    document.getElementById('paymentBookPrice').textContent = openPaymentBtn.dataset.price;
+    paymentModal.style.display = 'flex';
+  });
+
+  closeModal.addEventListener('click', function() {
+    paymentModal.style.display = 'none';
   });
 });
 </script>

@@ -72,6 +72,9 @@ def base(request):
 def services(request):
     return render(request,'services.html')
 
+def buy_book_view(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    return render(request, 'book_app/payment.html', {'book': book})
 def payment(request):
     return render(request,'payment.html')
 
