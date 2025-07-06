@@ -33,33 +33,42 @@ def login(request):
 
 from django.contrib.auth import login as auth_login  # for automatic login after registration
 
+from django.contrib.auth.models import User  # Django's built-in user model
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import NewUser  # your custom model if needed
+from django.contrib.auth.models import User
+from .models import NewUser
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
 def newacc(request):
     if request.method == "POST":
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        confirm_password=request.POST.get('confirm_password')
-        
-        # Check if user already exists
-        if password!=confirm_password:
-            messages.error(request,"Confirm password does not match the password")
-            return render(request, 'newacc.html')
-        
-            
-        user=User.objects.create_user(
-        username=username,
-        email=email,
-        password=password
-        )
-        user.save()   
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
 
-        new_user=NewUser(username=username, email=email,login_time=now())
+        # Create Django user (secure)
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already taken.")
+            return render(request, 'newacc.html')
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already used.")
+            return render(request, 'newacc.html')
+
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+
+        # Save to your own model (without password)
+        new_user = NewUser(username=username, email=email,password=password)
         new_user.save()
-        messages.success(request, "Account created successfully. Please log in.")
-        return redirect('login')  # redirect to login page after registration
+
+        messages.success(request, "Account created successfully!")
+        return redirect('dashboard')
 
     return render(request, 'newacc.html')
 
+       
 
 def dashboard(request):
     books = Book.objects.all().order_by('-id')  # latest first

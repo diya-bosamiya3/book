@@ -5,10 +5,10 @@ from django.db import models
 class NewUser(models.Model):
     username=models.CharField(max_length=126,null=True,blank=True)
     email=models.EmailField(unique=True)
-    login_time = models.DateTimeField()
+    password=models.CharField(max_length=50)
 
     def __str__(self):
-        return f"{self.email} logged in at {self.login_time}"
+        return f"{self.username} logged in "
     
 class LoginActivity(models.Model):
     username=models.CharField(max_length=126,null=True,blank=True)
@@ -29,6 +29,7 @@ class Contact(models.Model):
 
     def __str__(self):
         return self.name
+    
 class Book(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
