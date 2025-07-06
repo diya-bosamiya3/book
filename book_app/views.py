@@ -1,13 +1,13 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import login as auth_login  # for automatic login after registration
+from django.contrib.auth.models import User  # Django's built-in user model
 from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import NewUser  # your custom model if needed
 from django.contrib.auth.models import User
-from book_app.models import LoginActivity,Contact,NewUser,Book
-from django.utils.timezone import now
-from datetime import datetime
+from book_app.models import NewUser,LoginActivity
+from django.shortcuts import render, redirect
 from django.contrib import messages
-
 
 def login(request):
     if request.method=="POST":
@@ -30,18 +30,6 @@ def login(request):
     return render(request, 'login.html')
 
        
-
-from django.contrib.auth import login as auth_login  # for automatic login after registration
-
-from django.contrib.auth.models import User  # Django's built-in user model
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from .models import NewUser  # your custom model if needed
-from django.contrib.auth.models import User
-from .models import NewUser
-from django.shortcuts import render, redirect
-from django.contrib import messages
-
 def newacc(request):
     if request.method == "POST":
         username = request.POST.get("username")
