@@ -11,7 +11,7 @@
   <div class="container">
     <div class="form-box">
       <h2>Create New Account</h2>
-      <form action="{% url 'dashboard' %}" method="post">
+      <form action="{% url 'newacc' %}" method="POST">
         {% csrf_token %}
         <div class="input-group">
           <label for="name">Full Name</label>

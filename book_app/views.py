@@ -1,68 +1,73 @@
-from django.contrib.auth import authenticate
-from django.contrib.auth import login as auth_login  # for automatic login after registration
-from django.contrib.auth.models import User  # Django's built-in user model
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from .models import NewUser  # your custom model if needed
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
-from book_app.models import NewUser,LoginActivity
-from django.shortcuts import render, redirect
 from django.contrib import messages
-
+from datetime import datetime
+from book_app.models import Nuser, LoginActivity, Book, Contact
+from django.http import HttpRequest,HttpResponse
 def login(request):
-    if request.method=="POST":
+    if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        if not User.objects.filter(username=username).exists():
-            messages.error(request,'You dont have account here,Please make new Account!')
+        # ✅ Check if user exists in Nuser model (not LoginActivity)
+        try:
+            user = Nuser.objects.get(username=username)
+        except Nuser.DoesNotExist:
+            messages.error(request, 'You don’t have an account here. Please create one!')
             return redirect('newacc')
 
-        
-        user=authenticate(request,username=username,password=password)
-        
-        if user is not None:
-            LoginActivity.objects.create(username=user.username, email=user.email, login_time=now())
-            auth_login(request,user)
+        # ✅ Check if password matches
+        if user.password == password:
+            # ✅ Log activity
+            LoginActivity.objects.create(
+                username=user.username,
+                email=user.email,
+                login_time=datetime.now()
+            )
+
+           
             return redirect('dashboard')
         else:
-            messages.error(request, "Invalid username or password.")
-    return render(request, 'login.html')
+            messages.error(request, "Invalid password.")
+            return redirect('login')
 
-       
+    return render(request, 'login.html')
 def newacc(request):
     if request.method == "POST":
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
+        confirm = request.POST.get("confirm_password")
 
-        # Create Django user (secure)
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already taken.")
-            return render(request, 'newacc.html')
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already used.")
-            return render(request, 'newacc.html')
+        if password != confirm:
+            messages.error(request, "Passwords do not match.")
+            return redirect('newacc')
 
-        user = User.objects.create_user(username=username, email=email, password=password)
+
+        user = Nuser(username=username, email=email, password=password)
+        print(username,email,password)
         user.save()
 
-        # Save to your own model (without password)
-        new_user = NewUser(username=username, email=email,password=password)
-        new_user.save()
+        # Also store to LoginActivity
+        LoginActivity.objects.create(
+            username=username,
+            email=email,
+            login_time=datetime.now()
+        )
 
-        messages.success(request, "Account created successfully!")
+        
         return redirect('dashboard')
 
     return render(request, 'newacc.html')
 
-       
-
 def dashboard(request):
-    books = Book.objects.all().order_by('-id')  # latest first
-    print(books)
-    return render(request, 'dashboard.html', {'books': books})
-    
+    books = Book.objects.all().order_by('-id')
+    return render(request, 'dashboard.html', {
+        'books': books,
+        'username': request.user.username
+    })
+
 def base(request):
     return render(request,'base.html')
 

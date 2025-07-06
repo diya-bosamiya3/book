@@ -2,9 +2,9 @@ from django.db import models
 
 # Create your models here.
 
-class NewUser(models.Model):
-    username=models.CharField(max_length=126,null=True,blank=True)
-    email=models.EmailField(unique=True)
+class Nuser(models.Model):
+    username=models.CharField(max_length=126)
+    email=models.EmailField()
     password=models.CharField(max_length=50)
 
     def __str__(self):
