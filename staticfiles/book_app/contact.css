@@ -1,0 +1,137 @@
+/* Reset and Variables */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-brown: #8b4513;
+  --dark-brown: #654321;
+  --light-brown: #d2b48c;
+  --cream: #f5f5dc;
+  --parchment: #fdf5e6;
+  --gold: #daa520;
+  --dark-text: #2f1b14;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Global Styles */
+body {
+  font-family: "Georgia", "Times New Roman", serif;
+  background-color: var(--parchment);
+  color: var(--dark-text);
+  line-height: 1.6;
+}
+
+/* Main Content Container */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: var(--parchment);
+}
+
+/* Card Styles */
+.card {
+  background-color: var(--cream);
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px var(--shadow);
+  border: 1px solid var(--light-brown);
+}
+
+.card h2 {
+  color: var(--primary-brown);
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+/* Grid Layouts */
+.grid {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* Book Card Styles */
+.book-card {
+  background-color: var(--cream);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 10px var(--shadow);
+  transition: transform 0.3s ease;
+  border: 2px solid var(--light-brown);
+}
+
+.book-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px var(--shadow);
+}
+
+.book-cover {
+  width: 120px;
+  height: 180px;
+  background-color: var(--primary-brown);
+  margin: 0 auto 1rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 3rem;
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.text-gold {
+  color: var(--gold);
+}
+
+.text-brown {
+  color: var(--primary-brown);
+}
+
+.mb-2 {
+  margin-bottom: 2rem;
+}
+
+.mt-2 {
+  margin-top: 2rem;
+}
+
+/* Button Styling */
+button {
+  background-color: var(--primary-brown);
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--dark-brown);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

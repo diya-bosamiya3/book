@@ -112,7 +112,6 @@ def contact(request):
         contact=Contact(name=name,email=email,phone=phone,message=message,date=datetime.today())
         contact.save()
         messages.success(request, "Your message has been sent.")
-        
     return render(request,'contact.html')
 
 

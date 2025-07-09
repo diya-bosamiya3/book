@@ -4,69 +4,55 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'book_app/contact.css' %}">
-
 {% endblock extra_css %}
 
+
 {% block body %}
+    <main class="main-content">
+        <section class="card text-center">
+            <h1>Contact Us</h1>
+            <p>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+        </section>
 
-<!-- Contact Info Section -->
-<section class="contact-info-section">
-  <div class="contact-info-container">
-    <h2>Contact Us</h2>
-    <p>We’re here to help. Reach out to us through the following contact details:</p>
+        <div class="grid grid-3">
+            <div class="card">
+                <h2>📍 Visit Our Store</h2>
+                <p><strong>Vintage Books</strong></p>
+                <p>123 Literary Lane<br>
+                Booktown, BT 12345<br>
+                United States</p>
+                <p><strong>Hours:</strong><br>
+                Mon-Fri: 9:00 AM - 7:00 PM<br>
+                Sat: 10:00 AM - 6:00 PM<br>
+                Sun: 12:00 PM - 5:00 PM</p>
+            </div>
 
-    <div class="contact-detail">
-      <h3>Address:</h3>
-      <p>123 Digital Street,<br>Web City, Gujarat, India - 380001</p>
-    </div>
+            <div class="card">
+                <h2>📞 Call Us</h2>
+                <p><strong>Phone:</strong> (555) 123-4567</p>
+                <p><strong>Toll Free:</strong> 1-800-VINTAGE</p>
+                <p><strong>Fax:</strong> (555) 123-4568</p>
+                <br>
+                <p><strong>Customer Service Hours:</strong><br>
+                Monday - Friday: 8:00 AM - 8:00 PM<br>
+                Saturday: 9:00 AM - 6:00 PM<br>
+                Sunday: 10:00 AM - 4:00 PM</p>
+            </div>
 
-    <div class="contact-detail">
-      <h3>Phone:</h3>
-      <p>+91 98765 43210</p>
-    </div>
+            <div class="card">
+                <h2>✉️ Email Us</h2>
+                <p><strong>General Inquiries:</strong><br>
+                info@vintagebooks.com</p>
+                <p><strong>Book Appraisals:</strong><br>
+                appraisal@vintagebooks.com</p>
+                <p><strong>Selling Books:</strong><br>
+                sell@vintagebooks.com</p>
+                <p><strong>Customer Support:</strong><br>
+                support@vintagebooks.com</p>
+            </div>
+        </div>
 
-    <div class="contact-detail">
-      <h3>Email:</h3>
-      <p><a href="mailto:support@mysite.com">support@mysite.com</a></p>
-    </div>
-  </div>
-</section>
-
-<div class="review-container" style="width:50%">
-  <h2>Leave a Review</h2>
-  <form action="/submit_review" method="post">
-    <!-- Include CSRF token if using Django -->
-    {% csrf_token %}
-    
-    <div class="form-group">
-      <label for="name">Your Name</label>
-      <input type="text" id="name" name="username" required>
-    </div>
-
-    <div class="form-group">
-      <label for="condition">Book Condition</label>
-      <select id="condition" name="condition" required>
-        <option value="">-- Select Condition --</option>
-        <option value="Excellent">Excellent</option>
-        <option value="Very Good">Very Good</option>
-        <option value="Good">Good</option>
-        <option value="Fair">Fair</option>
-        <option value="Poor">Poor</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="review">Your Review</label>
-      <textarea id="review" name="review" placeholder="Tell us about your experience..." required></textarea>
-    </div>
-
-    <button type="submit">Submit Review</button>
-  </form>
-</div>
-
-
-
-<!-- Contact Form Section -->
+       <!-- Contact Form Section -->
 <section class="form-section">
   <div class="form-container">
     <h2>Feedback Form</h2>
@@ -96,5 +82,24 @@
     </form>
   </div>
 </section>
+
+        <section class="card-mg4">
+            <h2 class="text-center">Frequently Asked Questions</h2>
+            <div class="grid grid-3">
+                <div>
+                    <h3 class="text-brown">How do I sell my books?</h3>
+                    <p>Visit our "Sell Books" page to get started. You can either bring books to our store or request a free appraisal online.</p>
+                </div>
+                <div>
+                    <h3 class="text-brown">Do you authenticate books?</h3>
+                    <p>Yes! All rare and collectible books are authenticated by our team of experts before being listed for sale.</p>
+                </div>
+                <div>
+                    <h3 class="text-brown">What's your return policy?</h3>
+                    <p>We offer a 30-day money-back guarantee on all purchases. Books must be returned in the same condition.</p>
+                </div>
+            </div>
+        </section>
+    </main>
 
 {% endblock body %}

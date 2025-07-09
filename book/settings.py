@@ -118,11 +118,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+# URL to access static files (e.g., in templates)
+STATIC_URL = '/static/'
 
+# Where your app-specific static files are stored during development
 STATICFILES_DIRS = [
-    BASE_DIR / "book_app" / "static",  # Add this path
+    BASE_DIR / "book_app" / "static",  # This is correct
 ]
+
+# Where to collect all static files for production
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
