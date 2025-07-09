@@ -5,6 +5,7 @@ from django.contrib import messages
 from datetime import datetime
 from book_app.models import Nuser, LoginActivity, Book, Contact
 from django.http import HttpRequest,HttpResponse
+
 def login(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -62,11 +63,7 @@ def newacc(request):
     return render(request, 'newacc.html')
 
 def dashboard(request):
-    books = Book.objects.all().order_by('-id')
-    return render(request, 'dashboard.html', {
-        'books': books,
-        'username': request.user.username
-    })
+    return render(request,"dashboard.html")
 
 def base(request):
     return render(request,'base.html')
@@ -77,6 +74,7 @@ def services(request):
 def buy_book_view(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     return render(request, 'book_app/payment.html', {'book': book})
+
 def payment(request):
     return render(request,'payment.html')
 
@@ -95,8 +93,15 @@ def selling(request):
             description=request.POST.get('description')
         )
         book.save()
-        return redirect('dashboard')
+        return redirect('book')
     return render(request, 'selling.html')
+
+def book_display(request):
+    books = Book.objects.all().order_by('-id')
+    return render(request, 'books.html', {
+        'books': books,
+    })
+
 
 def contact(request):
     if request.method=="POST":
@@ -114,3 +119,4 @@ def contact(request):
 
 def booksel(request):
     return render(request,'booksel.html')
+

@@ -32,10 +32,44 @@
   </div>
 </section>
 
+<div class="review-container" style="width:50%">
+  <h2>Leave a Review</h2>
+  <form action="/submit_review" method="post">
+    <!-- Include CSRF token if using Django -->
+    {% csrf_token %}
+    
+    <div class="form-group">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" name="username" required>
+    </div>
+
+    <div class="form-group">
+      <label for="condition">Book Condition</label>
+      <select id="condition" name="condition" required>
+        <option value="">-- Select Condition --</option>
+        <option value="Excellent">Excellent</option>
+        <option value="Very Good">Very Good</option>
+        <option value="Good">Good</option>
+        <option value="Fair">Fair</option>
+        <option value="Poor">Poor</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="review">Your Review</label>
+      <textarea id="review" name="review" placeholder="Tell us about your experience..." required></textarea>
+    </div>
+
+    <button type="submit">Submit Review</button>
+  </form>
+</div>
+
+
+
 <!-- Contact Form Section -->
 <section class="form-section">
   <div class="form-container">
-    <h2>Send Us a Message</h2>
+    <h2>Feedback Form</h2>
     <form action="" method="post">
       {% csrf_token %}
       <div class="form-group">
