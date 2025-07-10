@@ -208,7 +208,7 @@
     {% if request.session.nuser_username or request.user.is_authenticated %}
     <div class="user-section">
       <span><i class="bi bi-person-circle"></i> Hi, {{ request.session.nuser_username|default:request.user.username }}</span>
-      <a href="/" class="btn btn-sm btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+      <a href="{% url 'login'%}" class="btn btn-sm btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
     </div>
     {% endif %}
   </div>

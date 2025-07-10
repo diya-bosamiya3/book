@@ -5,6 +5,7 @@ from django.contrib import messages
 from datetime import datetime
 from book_app.models import Nuser, LoginActivity, Book, Contact
 from django.http import HttpRequest,HttpResponse
+from django.shortcuts import render
 
 def login(request):
     if request.method == "POST":
@@ -17,7 +18,7 @@ def login(request):
         except Nuser.DoesNotExist:
             messages.error(request, 'You don’t have an account here. Please create one!')
             return redirect('newacc')
-
+        
         # ✅ Check if password matches
         if user.password == password:
             # ✅ Log activity
@@ -26,13 +27,12 @@ def login(request):
                 email=user.email,
                 login_time=datetime.now()
             )
-
            
             return redirect('dashboard')
         else:
             messages.error(request, "Invalid password.")
             return redirect('login')
-
+        
     return render(request, 'login.html')
 def newacc(request):
     if request.method == "POST":
@@ -44,7 +44,6 @@ def newacc(request):
         if password != confirm:
             messages.error(request, "Passwords do not match.")
             return redirect('newacc')
-
 
         user = Nuser(username=username, email=email, password=password)
         print(username,email,password)
@@ -66,18 +65,22 @@ def dashboard(request):
     return render(request,"dashboard.html")
 
 def base(request):
-    return render(request,'base.html')
+    userinfo=LoginActivity.objects.get()
+    return render(request,'base.html',{
+        'userinfo':userinfo
+    })
 
 def services(request):
     return render(request,'services.html')
 
-def buy_book_view(request, book_id):
-    book = get_object_or_404(Book, id=book_id)
-    return render(request, 'book_app/payment.html', {'book': book})
+def payment(request,book_id):
+    book=get_object_or_404(Book,pk=book_id)
+    return render(request,'payment.html',{
+        'book':book
+    })
 
-def payment(request):
-    return render(request,'payment.html')
-
+def success(request):
+    return render(request,'success.html')
 
 def selling(request):
     if request.method == "POST":

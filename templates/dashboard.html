@@ -178,8 +178,8 @@
   <div class="container hero-content">
     <h1 class="animate-title">Welcome to Book Bazaar</h1>
     <p class="animate-subtitle">Buy and Sell Pre-Loved Books With Ease</p>
-    <a href="" class="btn btn-primary btn-lg btn-animated">Sell a Book</a>
-    <a href="" class="btn btn-outline-dark btn-lg btn-animated">Browse Books</a>
+    <a href="{% url "selling" %}" class="btn btn-primary btn-lg btn-animated">Sell a Book</a>
+    <a href="{% url "book" %}" class="btn btn-outline-dark btn-lg btn-animated">Browse Books</a>
   </div>
 </section>
 
@@ -192,7 +192,7 @@
           <div class="why-box">
             <h3>📘 Buy Rare Books</h3>
             <p>Discover signed copies, vintage gems, and collector's items from our curated collection.</p>
-            <a href="{% url 'dashboard' %}" class="btn-brown">Browse Books</a>
+            <a href="{% url 'book' %}" class="btn-brown">Browse Books</a>
           </div>
         </div>
 

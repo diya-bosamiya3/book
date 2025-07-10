@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Contact Us{% endblock title %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'book_app/success.css' %}">
+{% endblock extra_css %}
+
+
+{% block body %}
+      
+
+
+    <div class="success-container">
+        <div class="success-icon"></div>
+        
+        <h1>Payment Successful!</h1>
+        <p>Thank you for your purchase. Your order has been confirmed.</p>
+        
+        <div class="order-details">
+            <h3>Order Details</h3>
+            <div class="detail-row">
+                <span>Order ID:</span>
+                <span>#{{ order.id }}</span>
+            </div>
+            <div class="detail-row">
+                <span>Book:</span>
+                <span>{{ order.book.title }}</span>
+            </div>
+            <div class="detail-row">
+                <span>Author:</span>
+                <span>{{ order.book.author }}</span>
+            </div>
+            <div class="detail-row">
+                <span>Condition:</span>
+                <span>{{ order.book.get_condition_display }}</span>
+            </div>
+            <div class="detail-row">
+                <span>Total Paid:</span>
+                <span>${{ order.total_amount }}</span>
+            </div>
+        </div>
+        
+        <p>A confirmation email has been sent to your registered email address.</p>
+        
+        <div style="margin-top: 30px;">
+            <a href="/" class="btn">Continue Shopping</a>
+            <a href="/orders/" class="btn btn-secondary">View Orders</a>
+        </div>
+    </div>
+
+
+{% endblock body %}
