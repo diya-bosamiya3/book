@@ -1,12 +1,1 @@
-{% if data %}
-  <h2>Book For Sale</h2>
-  <div class="book-info">
-    {% for key, value in data.items %}
-      <div style="margin-bottom: 0.5rem;">
-        <strong>{{ key|capfirst }}:</strong> {{ value }}
-      </div>
-    {% endfor %}
-  </div>
-{% else %}
-  <h2>No Data Submitted</h2>
-{% endif %}
+

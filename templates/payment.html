@@ -1,150 +1,185 @@
-{% extends "base.html" %}
-{% load static %}
+<!-- payment.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book Payment</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-{% block title %}Payment Page{% endblock %}
+    .payment-container {
+      max-width: 750px;
+      margin: 3rem auto;
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+    }
 
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'book_app/payment.css' %}">
-{% endblock %}
+    .payment-methods {
+      display: flex;
+      gap: 10px;
+      margin: 2rem 0 1rem;
+    }
 
-{% block body %}
+    .payment-methods input[type="radio"] {
+      display: none;
+    }
+
+    .payment-methods label {
+      flex: 1;
+      padding: 0.8rem;
+      text-align: center;
+      background-color: #f1f1f1;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      border: 2px solid transparent;
+    }
+
+    .payment-methods input[type="radio"]:checked + label {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      border-color: #5a67d8;
+      font-weight: bold;
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .form-label {
+      font-weight: 600;
+      margin-top: 0.8rem;
+    }
+
+    input, textarea {
+      border-radius: 10px !important;
+      border: 1px solid #ccc;
+      padding: 0.6rem;
+      width: 100%;
+      transition: 0.3s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #764ba2;
+      box-shadow: 0 0 0 0.15rem rgba(118, 75, 162, 0.25);
+      outline: none;
+    }
+
+    button[type="submit"] {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      border: none;
+      padding: 0.75rem;
+      color: white;
+      border-radius: 12px;
+      width: 100%;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    button[type="submit"]:hover {
+      background: linear-gradient(to right, #5a67d8, #6b46c1);
+    }
+  </style>
+</head>
+<body>
+
 <div class="payment-container">
-  <div class="payment-header text-center text-white py-4" style="background: linear-gradient(to right, #667eea, #764ba2);">
-    <h2>📘 Checkout</h2>
-    <p>Secure payment for your book purchase</p>
-  </div>
+  <h2 class="text-center mb-3">📘 Checkout</h2>
+  <p class="text-center text-muted mb-4">Secure payment for your book purchase</p>
 
-<div class="payment-body p-4">
-  <div class="book-details mb-4">
-    <div class="row g-3 p-3 rounded shadow-lg bg-white align-items-center">
-      
-      <!-- Image Column -->
-      <div class="col-md-4 text-center">
-        <img src="{{ book.book_photo.url }}" class="img-fluid rounded-3 shadow-sm" alt="{{ book.book_title }}" style="max-height: 250px; object-fit: cover;" />
+  <form method="POST">
+    {% csrf_token %}
+
+    <!-- Book Details -->
+    <div class="book-details mb-4 d-flex gap-3 align-items-start">
+      <img src="{{ book.book_photo.url }}" class="rounded shadow" alt="{{ book.book_title }}" style="width: 150px; height: 210px; object-fit: cover;">
+      <div>
+        <h5 class="text-primary fw-bold">{{ book.book_title }}</h5>
+        <p><strong>Author:</strong> {{ book.author }}</p>
+        <p><strong>Price:</strong> ₹{{ book.price }}</p>
+        <p class="text-muted small">Thank you for choosing second-hand books 🌱</p>
       </div>
-
-      <!-- Text Details Column -->
-      <div class="col-md-8">
-        <h3 class="fw-bold text-primary">{{ book.book_title }}</h3>
-        <p class="mb-2"><i class="bi bi-person-fill"></i> <strong>Author:</strong> {{ book.author }}</p>
-        <p class="mb-2"><i class="bi bi-currency-rupee"></i> <strong>Price:</strong> ₹{{ book.price }}</p>
-        <p class="text-muted fst-italic">Thank you for choosing a second-hand book and supporting sustainability 🌱</p>
-      </div>
-
-    </div>
-  </div>
-
-
-    <div class="tabs d-flex mb-3">
-      <button class="tab-btn btn btn-light flex-fill me-1 active" data-tab="credit">Credit Card</button>
-      <button class="tab-btn btn btn-light flex-fill me-1" data-tab="upi">UPI</button>
-      <button class="tab-btn btn btn-light flex-fill" data-tab="cash">Cash</button>
     </div>
 
-    <form id="payment-form">
-      <!-- Credit Card -->
-      <div id="credit" class="form-section active">
-        <div class="form-group mb-3">
-          <label>Cardholder Name</label>
-          <input type="text" class="form-control" required>
-        </div>
-        <div class="form-group mb-3">
-          <label>Card Number</label>
-          <input type="text" class="form-control" maxlength="16" required>
-        </div>
-        <div class="form-group mb-3">
-          <label>Expiry Date</label>
-          <input type="text" class="form-control" placeholder="MM/YY" required>
-        </div>
-        <div class="form-group mb-3">
-          <label>CVV</label>
-          <input type="text" class="form-control" maxlength="3" required>
-        </div>
-      </div>
+    <!-- Payment Method Options -->
+    <div class="payment-methods">
+      <input type="radio" id="method-credit" name="payment_method" value="credit" checked>
+      <label for="method-credit" onclick="showSection('credit')">Credit Card</label>
 
-      <!-- UPI Section -->
-      <div id="upi" class="form-section" style="display: none;">
-        <div class="form-group mb-3">
-          <label>Select UPI Method</label>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="upi-option" id="upi-id-option" checked>
-            <label class="form-check-label" for="upi-id-option">Enter UPI ID</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="upi-option" id="upi-qr-option">
-            <label class="form-check-label" for="upi-qr-option">Scan QR Code</label>
-          </div>
-        </div>
+      <input type="radio" id="method-upi" name="payment_method" value="upi">
+      <label for="method-upi" onclick="showSection('upi')">UPI</label>
 
-        <div id="upi-id-field" class="form-group mb-3">
-          <label>UPI ID</label>
-          <input type="text" class="form-control" placeholder="example@upi" required>
-        </div>
+      <input type="radio" id="method-cash" name="payment_method" value="cash">
+      <label for="method-cash" onclick="showSection('cash')">Cash</label>
+    </div>
 
-        <div id="upi-qr-field" class="text-center" style="display: none;">
-          <p><strong>Scan the QR code using any UPI app</strong></p>
-          <img src="{% static 'book_app/upi1.jpg' %}" alt="Scan QR" style="width: 220px; border: 2px solid #ccc; border-radius: 10px;">
-          <p class="mt-2 text-muted">UPI ID: <strong>diyabosamiya3@okicici</strong></p>
-        </div>
-      </div>
+    <!-- Credit Card Section -->
+    <div id="credit" class="form-section active">
+      <label class="form-label">Cardholder Name</label>
+      <input type="text" name="name" value="{{ request.user.username }}">
 
-      <!-- Cash -->
-      <div id="cash" class="form-section" style="display: none;">
-        <div class="form-group mb-3">
-          <label>Delivery Address</label>
-          <textarea class="form-control" rows="3" required></textarea>
-        </div>
-        <div class="form-group mb-3">
-          <label>Contact Number</label>
-          <input type="tel" class="form-control" required>
-        </div>
-      </div>
+      <label class="form-label">Card Number</label>
+      <input type="text" name="card_num" maxlength="16">
 
-      <button type="submit" class="btn btn-primary w-100 mt-3">Pay Now</button>
-    </form>
-  </div>
+      <label class="form-label">Expiry Date</label>
+      <input type="text" name="expiry">
+
+      <label class="form-label">CVV</label>
+      <input type="text" name="cvv" maxlength="3">
+    </div>
+
+    <!-- UPI Section -->
+    <div id="upi" class="form-section">
+      <label class="form-label">Your Name</label>
+      <input type="text" name="name" value="{{ request.user.username }}">
+
+      <label class="form-label">UPI ID</label>
+      <input type="text" name="upi_id" placeholder="example@upi">
+    </div>
+
+    <!-- Cash Section -->
+    <div id="cash" class="form-section">
+      <label class="form-label">Your Name</label>
+      <input type="text" name="name" value="{{ request.user.username }}">
+
+      <label class="form-label">Delivery Address</label>
+      <textarea name="address" rows="3" placeholder="Street, City, ZIP"></textarea>
+
+      <label class="form-label">Contact Number</label>
+      <input type="text" name="contact" placeholder="10-digit number">
+    </div>
+
+    <button type="submit">Pay Now</button>
+  </form>
 </div>
 
 <script>
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  const sections = document.querySelectorAll('.form-section');
-
-  tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const tab = btn.dataset.tab;
-      sections.forEach(sec => {
-        sec.style.display = 'none';
-        if (sec.id === tab) {
-          sec.style.display = 'block';
-        }
-      });
+  function showSection(method) {
+    document.querySelectorAll('.form-section').forEach(section => {
+      section.classList.remove('active');
     });
-  });
+    document.getElementById(method).classList.add('active');
+  }
 
-  // UPI ID or QR toggle
-  const upiIdOption = document.getElementById('upi-id-option');
-  const upiQrOption = document.getElementById('upi-qr-option');
-  const upiIdField = document.getElementById('upi-id-field');
-  const upiQrField = document.getElementById('upi-qr-field');
-
-  upiIdOption.addEventListener('change', () => {
-    upiIdField.style.display = 'block';
-    upiQrField.style.display = 'none';
-  });
-
-  upiQrOption.addEventListener('change', () => {
-    upiIdField.style.display = 'none';
-    upiQrField.style.display = 'block';
-  });
-
-  document.getElementById('payment-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    alert("✅ Payment submitted successfully!");
-    window.location.href = "{% url 'success' %}";
-  });
+  window.onload = () => {
+    const selected = document.querySelector('input[name="payment_method"]:checked').value;
+    showSection(selected);
+  };
 </script>
-{% endblock %}
+
+</body>
+</html>

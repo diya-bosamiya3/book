@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime
-from book_app.models import Nuser, LoginActivity, Book, Contact
+from book_app.models import Nuser, LoginActivity, Book, Contact,Payment
 from django.http import HttpRequest,HttpResponse
 from django.shortcuts import render
 
@@ -73,14 +73,11 @@ def base(request):
 def services(request):
     return render(request,'services.html')
 
-def payment(request,book_id):
-    book=get_object_or_404(Book,pk=book_id)
-    return render(request,'payment.html',{
-        'book':book
-    })
-
 def success(request):
-    return render(request,'success.html')
+    success_payment=Payment.objects.all()
+    return render(request,'success.html',{
+        'success_payment':success_payment
+    })
 
 def selling(request):
     if request.method == "POST":
@@ -122,3 +119,36 @@ def contact(request):
 def booksel(request):
     return render(request,'booksel.html')
 
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Book, Payment
+
+def payment(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+
+    if request.method == "POST":
+        method = request.POST.get("payment_method")
+        name = request.POST.get("name")
+        card_num = request.POST.get("card_num") if method == "credit" else None
+        expiry = request.POST.get("expiry") if method == "credit" else None
+        cvv = request.POST.get("cvv") if method == "credit" else None
+        upi_id = request.POST.get("upi_id") if method == "upi" else None
+        address = request.POST.get("address") if method == "cash" else None
+        contact = request.POST.get("contact") if method == "cash" else None
+
+        Payment.objects.create(
+            book=book,
+            payment_method=method,
+            name=name,
+            card_num=card_num,
+            expiry=expiry,
+            cvv=cvv,
+            upi_id=upi_id,
+            address=address,
+            contact=contact,
+        )
+
+        return redirect('payment_success')  # make sure this URL name exists
+
+    return render(request, 'payment.html', {'book': book})
