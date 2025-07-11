@@ -130,7 +130,7 @@
     <!-- Credit Card Section -->
     <div id="credit" class="form-section active">
       <label class="form-label">Cardholder Name</label>
-      <input type="text" name="name" value="{{ request.user.username }}">
+      <input type="text" name="name" value="">
 
       <label class="form-label">Card Number</label>
       <input type="text" name="card_num" maxlength="16">
@@ -145,7 +145,7 @@
     <!-- UPI Section -->
     <div id="upi" class="form-section">
       <label class="form-label">Your Name</label>
-      <input type="text" name="name" value="{{ request.user.username }}">
+      <input type="text" name="name" value="">
 
       <label class="form-label">UPI ID</label>
       <input type="text" name="upi_id" placeholder="example@upi">
@@ -154,7 +154,7 @@
     <!-- Cash Section -->
     <div id="cash" class="form-section">
       <label class="form-label">Your Name</label>
-      <input type="text" name="name" value="{{ request.user.username }}">
+      <input type="text" name="name" value="">
 
       <label class="form-label">Delivery Address</label>
       <textarea name="address" rows="3" placeholder="Street, City, ZIP"></textarea>
