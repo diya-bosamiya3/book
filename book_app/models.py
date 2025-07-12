@@ -44,9 +44,27 @@ class Book(models.Model):
     def __str__(self):
         return self.book_title
 
+class Payment(models.Model):
+    PAYMENT_METHODS = [
+        ('credit', 'Credit Card'),
+        ('upi', 'UPI'),
+        ('cash', 'Cash'),
+    ]
 
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
 
-    
+    card_num = models.CharField(max_length=16, blank=True, null=True)
+    expiry = models.CharField(max_length=5, blank=True, null=True)
+    cvv = models.CharField(max_length=3, blank=True, null=True)
+
+    upi_id = models.CharField(max_length=100, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    contact = models.CharField(max_length=15, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} paid for {self.book.book_title} via {self.payment_method}"
 
 
 

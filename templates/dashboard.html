@@ -9,121 +9,113 @@
 <link rel="stylesheet" href="{% static 'book_app/dashboard.css' %}">
 <style>
 :root {
-  --aesthetic-bg: linear-gradient(135deg, #f6ede2, #fffaf0);  /* elegant parchment gradient */
-  --aesthetic-box-bg: #fefbf8;
-  --aesthetic-border: #decdbb;
-  --aesthetic-dark: #5a3e2b;
-  --aesthetic-accent: #a36b48;
-  --aesthetic-shadow: rgba(0, 0, 0, 0.08);
+  --primary-bg: #fff2eb;
+  --secondary-bg: #ffeede;
+  --highlight: #ffd2a6;
+  --accent: #e2714d;
+  --accent-dark: #c75634;
+  --text-dark: #422a22;
+  --box-shadow: rgba(0, 0, 0, 0.05);
+  --box-radius: 12px;
+  --font-serif: 'Georgia', serif;
 }
 
-/* WHY SECTION (Top 3 column section) */
-.why-section {
-  background: var(--aesthetic-bg);
-  padding: 4rem 1rem;
-  text-align: center;
+body {
+  background-color: var(--primary-bg);
+  color: var(--text-dark);
+  font-family: var(--font-serif);
 }
 
-.why-section h2 {
-  font-size: 2.2rem;
-  margin-bottom: 3rem;
-  color: var(--aesthetic-dark);
-  font-family: 'Georgia', serif;
+.hero-content h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent);
+  animation: fadeInDown 1s ease-out;
 }
 
-.why-box {
-  background-color: var(--aesthetic-box-bg);
-  border: 1px solid var(--aesthetic-border);
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 6px 14px var(--aesthetic-shadow);
-  transition: 0.3s ease;
-  height: 100%;
+.hero-content p {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  color: #6e4f45;
+  animation: fadeInUp 1.2s ease-out;
 }
 
-.why-box:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-}
-
-.why-box h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: var(--aesthetic-accent);
-}
-
-.why-box p {
+.btn-animated {
+  margin: 0 0.5rem;
+  padding: 0.7rem 1.6rem;
   font-size: 1rem;
-  color: #5c4a3c;
+  border-radius: 8px;
+  transition: all 0.3s ease-in-out;
 }
 
-.btn-brown {
-  background-color: var(--aesthetic-accent);
-  color: white;
-  text-decoration: none;
-  padding: 0.6rem 1.4rem;
-  border-radius: 6px;
-  transition: 0.3s ease;
-  display: inline-block;
-  margin-top: 1.2rem;
-  font-family: 'Georgia', serif;
+.btn-animated:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px var(--box-shadow);
 }
 
-.btn-brown:hover {
-  background-color: #8b5034;
-  color: white;
+.carousel-caption {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 1rem;
+  color: var(--text-dark);
 }
 
-/* WHY CHOOSE (bottom section) */
+/* Aesthetic Boxes */
+.why-section,
 .why-choose {
-  background: var(--aesthetic-bg);
-  padding: 3rem 2rem;
-  margin-top: 2rem;
+  background: var(--secondary-bg);
+  padding: 4rem 2rem;
   text-align: center;
 }
 
-.why-title {
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: var(--aesthetic-dark);
+.why-section h2,
+.why-choose h2 {
+  font-size: 2.5rem;
+  margin-bottom: 2.5rem;
+  color: var(--accent-dark);
 }
 
-.why-grid {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.why-card {
-  flex: 1 1 250px;
-  background-color: var(--aesthetic-box-bg);
-  border: 1px solid var(--aesthetic-border);
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.why-box, .why-card {
+  background-color: #fff;
+  border: 1px solid #f0e0d2;
+  border-radius: var(--box-radius);
+  padding: 2rem;
+  box-shadow: 0 8px 20px var(--box-shadow);
   transition: transform 0.3s;
 }
 
-.why-card:hover {
-  transform: translateY(-5px);
+.why-box:hover, .why-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
 }
 
-.why-card h3 {
-  color: var(--aesthetic-accent);
-  margin-bottom: 0.8rem;
-  font-size: 1.3rem;
+.why-box h3, .why-card h3 {
+  font-size: 1.6rem;
+  color: var(--accent);
+  margin-bottom: 1rem;
 }
 
-.why-card p {
-  color: #4e3a2e;
-  font-size: 0.95rem;
+.why-box p, .why-card p {
+  font-size: 1rem;
+  color: #5e463b;
 }
 
-/* RESPONSIVE */
+.btn-brown {
+  background-color: var(--accent);
+  color: #fff;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: 0.3s ease;
+}
+
+.btn-brown:hover {
+  background-color: var(--accent-dark);
+  color: white;
+}
+
 @media (max-width: 768px) {
-  .why-box,
-  .why-card {
+  .why-box, .why-card {
     margin-bottom: 1.5rem;
   }
 
@@ -133,13 +125,21 @@
   }
 }
 
-</style>
-  
-{% endblock extra_css %}
-{% block body %}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock extra_css %}
+
+{% block body %}
 <!-- Carousel -->
-<div id="carouselExampleCaptions" class="carousel slide mb-3" data-bs-ride="carousel" >
+<div id="carouselExampleCaptions" class="carousel slide mb-3" data-bs-ride="carousel">
   <div class="carousel-inner" style="height:500px">
     <div class="carousel-item active">
       <img src="{% static 'book_app/img5.jpeg' %}" class="d-block w-100" alt="Slide 1">
@@ -183,39 +183,38 @@
   </div>
 </section>
 
-  <section class="why-section">
-    <div class="container">
-      <h2>Why Choose Book Bazaar?</h2>
-      <div class="row justify-content-center">
-        
-        <div class="col-md-4 mb-4">
-          <div class="why-box">
-            <h3>📘 Buy Rare Books</h3>
-            <p>Discover signed copies, vintage gems, and collector's items from our curated collection.</p>
-            <a href="{% url 'book' %}" class="btn-brown">Browse Books</a>
-          </div>
-        </div>
+<section class="why-section">
+  <div class="container">
+    <h2>Why Choose Book Bazaar?</h2>
+    <div class="row justify-content-center">
 
-        <div class="col-md-4 mb-4">
-          <div class="why-box">
-            <h3>💰 Sell Your Books</h3>
-            <p>List your used books and earn easily. We offer fair prices and a simple process.</p>
-            <a href="{% url 'selling' %}" class="btn-brown">Sell Now</a>
-          </div>
+      <div class="col-md-4 mb-4">
+        <div class="why-box">
+          <h3>📘 Buy Rare Books</h3>
+          <p>Discover signed copies, vintage gems, and collector's items from our curated collection.</p>
+          <a href="{% url 'book' %}" class="btn-brown">Browse Books</a>
         </div>
-
-        <div class="col-md-4 mb-4">
-          <div class="why-box">
-            <h3>⭐ Expert Appraisal</h3>
-            <p>Get expert valuation of your collection. Our team helps determine true book value.</p>
-            <a href="{% url 'contact' %}" class="btn-brown">Get Appraisal</a>
-          </div>
-        </div>
-
       </div>
-    </div>
-  </section>
 
+      <div class="col-md-4 mb-4">
+        <div class="why-box">
+          <h3>💰 Sell Your Books</h3>
+          <p>List your used books and earn easily. We offer fair prices and a simple process.</p>
+          <a href="{% url 'selling' %}" class="btn-brown">Sell Now</a>
+        </div>
+      </div>
+
+      <div class="col-md-4 mb-4">
+        <div class="why-box">
+          <h3>⭐ Expert Appraisal</h3>
+          <p>Get expert valuation of your collection. Our team helps determine true book value.</p>
+          <a href="{% url 'contact' %}" class="btn-brown">Get Appraisal</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 <!-- Why Choose Section -->
 <section class="why-choose">
@@ -236,6 +235,7 @@
   </div>
 </section>
 {% endblock body %}
+
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -282,5 +282,3 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-
-

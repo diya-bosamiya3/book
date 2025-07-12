@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from book_app.views import login,newacc,dashboard,base,contact,booksel,selling,services,payment,book_display,success
+from book_app.views import login,newacc,dashboard,base,contact,booksel,selling,services,payment,book_display,success,download_receipt
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -33,9 +33,10 @@ urlpatterns = [
     path('selling/',selling,name='selling'),
     path('booksel/',booksel,name='booksel'),
     path('services/',services,name='services'),
-    path('payment/<int:book_id>/',payment,name='payment'),
     path('books_display/',book_display,name='book'),
-    path('payment_success/',success,name='success'),
+    path('payment/<int:book_id>/',payment, name='payment'),
+    path('payment/success/<int:payment_id>/',success, name='success'),
+    path('receipt/<int:payment_id>/',download_receipt, name='download_receipt'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

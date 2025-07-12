@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Arial'; padding: 20px; }
+        h1 { color: #4CAF50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Payment Receipt</h1>
+    <p><strong>Name:</strong> {{ order.name }}</p>
+    <p><strong>Order ID:</strong> #{{ order.id }}</p>
+    <p><strong>Book:</strong> {{ order.book.book_title }} by {{ order.book.author }}</p>
+    <p><strong>Amount:</strong> ₹{{ order.book.price }}</p>
+    <p><strong>Payment Mode:</strong> {{ order.get_payment_method_display }}</p>
+
+    {% if order.payment_method == 'credit' %}
+        <p><strong>Card:</strong> **** {{ order.card_num|slice:"-4:" }}</p>
+    {% elif order.payment_method == 'upi' %}
+        <p><strong>UPI ID:</strong> {{ order.upi_id }}</p>
+    {% elif order.payment_method == 'cash' %}
+        <p><strong>Address:</strong> {{ order.address }}</p>
+        <p><strong>Contact:</strong> {{ order.contact }}</p>
+    {% endif %}
+</body>
+</html>

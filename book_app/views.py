@@ -6,6 +6,8 @@ from datetime import datetime
 from book_app.models import Nuser, LoginActivity, Book, Contact,Payment
 from django.http import HttpRequest,HttpResponse
 from django.shortcuts import render
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 def login(request):
     if request.method == "POST":
@@ -73,11 +75,6 @@ def base(request):
 def services(request):
     return render(request,'services.html')
 
-def success(request):
-    success_payment=Payment.objects.all()
-    return render(request,'success.html',{
-        'success_payment':success_payment
-    })
 
 def selling(request):
     if request.method == "POST":
@@ -120,35 +117,52 @@ def booksel(request):
     return render(request,'booksel.html')
 
 
-
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Book, Payment
-
 def payment(request, book_id):
     book = get_object_or_404(Book, id=book_id)
 
     if request.method == "POST":
         method = request.POST.get("payment_method")
         name = request.POST.get("name")
-        card_num = request.POST.get("card_num") if method == "credit" else None
-        expiry = request.POST.get("expiry") if method == "credit" else None
-        cvv = request.POST.get("cvv") if method == "credit" else None
-        upi_id = request.POST.get("upi_id") if method == "upi" else None
-        address = request.POST.get("address") if method == "cash" else None
-        contact = request.POST.get("contact") if method == "cash" else None
+        card_num = request.POST.get("card_num")
+        expiry = request.POST.get("expiry")
+        cvv = request.POST.get("cvv")
+        upi_id = request.POST.get("upi_id")
+        address = request.POST.get("address")
+        contact = request.POST.get("contact")
 
-        Payment.objects.create(
+        payment_obj = Payment.objects.create(
             book=book,
-            payment_method=method,
             name=name,
-            card_num=card_num,
-            expiry=expiry,
-            cvv=cvv,
-            upi_id=upi_id,
-            address=address,
-            contact=contact,
+            payment_method=method,
+            card_num=card_num if method == "credit" else None,
+            expiry=expiry if method == "credit" else None,
+            cvv=cvv if method == "credit" else None,
+            upi_id=upi_id if method == "upi" else None,
+            address=address if method == "cash" else None,
+            contact=contact if method == "cash" else None,
         )
 
-        return redirect('payment_success')  # make sure this URL name exists
+        return redirect('success', payment_id=payment_obj.id)
 
-    return render(request, 'payment.html', {'book': book})
+    return render(request, "payment.html", {"book": book})
+
+
+def success(request, payment_id):
+    order = get_object_or_404(Payment, id=payment_id)
+    return render(request, 'success.html', {'order': order})
+
+def download_receipt(request, payment_id):
+    payment = get_object_or_404(Payment, id=payment_id)
+    template_path = 'receipt.html'
+    context = {'order': payment}
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Receipt_Order_{payment.id}.pdf"'
+
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('We had some errors while generating the receipt.')
+    return response

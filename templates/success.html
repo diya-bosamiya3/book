@@ -1,53 +1,173 @@
 {% extends "base.html" %}
-{% block title %}Contact Us{% endblock title %}
 {% load static %}
+{% block title %}Payment Complete{% endblock title %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'book_app/success.css' %}">
+<style>
+  body {
+    background: linear-gradient(to right, #fdfbfb, #ebedee);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .confirmation {
+    max-width: 800px;
+    margin: 5rem auto;
+    padding: 3rem;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+
+  .confirmation img {
+    width: 160px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .confirmation h1 {
+    color: #2f855a;
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .confirmation p {
+    color: #4a5568;
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+  }
+
+  .summary {
+    background-color: #f7fafc;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: left;
+    margin-top: 2rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .summary h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.6rem;
+    color: #2d3748;
+  }
+
+  .summary .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #edf2f7;
+  }
+
+  .summary .row span {
+    font-size: 1rem;
+  }
+
+  .summary .row strong {
+    color: #2c5282;
+  }
+
+  .actions {
+    margin-top: 2.5rem;
+  }
+
+  .btn-primary {
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: white;
+    padding: 0.8rem 1.6rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    text-decoration: none;
+    margin-right: 1rem;
+    transition: background 0.3s;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(to right, #5a67d8, #6b46c1);
+  }
+
+  .btn-outline {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #667eea;
+    color: #667eea;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .btn-outline:hover {
+    background-color: #eef2ff;
+  }
+</style>
 {% endblock extra_css %}
 
-
 {% block body %}
-      
+<div class="confirmation">
+  <img src="{{ order.book.book_photo.url }}" alt="{{ order.book.book_title }}" />
 
+  <h1>Payment Successful!</h1>
+  <p>Thank you <strong>{{ order.name }}</strong> for your order. <br>Your book is now reserved and will be processed shortly.</p>
 
-    <div class="success-container">
-        <div class="success-icon"></div>
-        
-        <h1>Payment Successful!</h1>
-        <p>Thank you for your purchase. Your order has been confirmed.</p>
-        
-        <div class="order-details">
-            <h3>Order Details</h3>
-            <div class="detail-row">
-                <span>Order ID:</span>
-                <span>#{{ order.id }}</span>
-            </div>
-            <div class="detail-row">
-                <span>Book:</span>
-                <span>{{success_payment.book.title }}</span>
-            </div>
-            <div class="detail-row">
-                <span>Author:</span>
-                <span>{{ order.book.author }}</span>
-            </div>
-            <div class="detail-row">
-                <span>Condition:</span>
-                <span>{{ order.book.get_condition_display }}</span>
-            </div>
-            <div class="detail-row">
-                <span>Total Paid:</span>
-                <span>${{ order.total_amount }}</span>
-            </div>
-        </div>
-        
-        <p>A confirmation email has been sent to your registered email address.</p>
-        
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn">Continue Shopping</a>
-            <a href="/orders/" class="btn btn-secondary">View Orders</a>
-        </div>
+  <div class="summary">
+    <h3>Order Summary</h3>
+
+    <div class="row">
+      <span><strong>Order ID:</strong></span>
+      <span>#{{ order.id }}</span>
+    </div>
+    <div class="row">
+      <span><strong>Book Title:</strong></span>
+      <span>{{ order.book.book_title }}</span>
+    </div>
+    <div class="row">
+      <span><strong>Author:</strong></span>
+      <span>{{ order.book.author }}</span>
+    </div>
+    <div class="row">
+      <span><strong>Price:</strong></span>
+      <span>₹{{ order.book.price }}</span>
+    </div>
+    <div class="row">
+      <span><strong>Payment Mode:</strong></span>
+      <span>{{ order.get_payment_method_display }}</span>
     </div>
 
+    {% if order.payment_method == 'credit' %}
+    <div class="row">
+      <span><strong>Card Ending:</strong></span>
+      <span>**** {{ order.card_num|slice:"-4:" }}</span>
+    </div>
+    {% elif order.payment_method == 'upi' %}
+    <div class="row">
+      <span><strong>UPI ID:</strong></span>
+      <span>{{ order.upi_id }}</span>
+    </div>
+    {% elif order.payment_method == 'cash' %}
+    <div class="row">
+      <span><strong>Delivery Address:</strong></span>
+      <span>{{ order.address }}</span>
+    </div>
+    <div class="row">
+      <span><strong>Contact No.:</strong></span>
+      <span>{{ order.contact }}</span>
+    </div>
+    {% endif %}
+  </div>
 
+  <div class="actions">
+    <a href="{% url 'dashboard' %}" class="btn-primary">Continue Shopping</a>
+    <a href="{% url 'download_receipt' order.id %}" class="btn-outline">Download Receipt</a>
+  </div>
+</div>
 {% endblock body %}
+
