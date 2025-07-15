@@ -16,18 +16,20 @@
     {% for book in books %}
       <div class="col-12 col-sm-6 col-md-4 col-lg-3">
         <div class="card book-card h-100"
-             data-id="{{ book.id }}"
-             data-title="{{ book.book_title }}"
-             data-author="{{ book.author }}"
-             data-price="{{ book.price }}"
-             data-condition="{{ book.condition }}"
-             data-description="{{ book.description }}"
-             data-img="{{ book.book_photo.url }}">
-          {% if book.book_photo %}
-            <img src="{{ book.book_photo.url }}" class="card-img-top" alt="{{ book.book_title }}" style="height:320px;" />
-          {% else %}
-            <img src="{% static 'book_app/default_book.png' %}" class="card-img-top" alt="No Image" />
-          {% endif %}
+     data-id="{{ book.id }}"
+     data-title="{{ book.book_title }}"
+     data-author="{{ book.author }}"
+     data-price="{{ book.price }}"
+     data-condition="{{ book.condition }}"
+     data-description="{{ book.description }}"
+     data-img="{% if book.book_photo %}{{ book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}">
+
+         {% if book.book_photo %}
+  <img src="{{ book.book_photo.url }}" class="card-img-top" alt="{{ book.book_title }}" style="height:320px;" />
+{% else %}
+  <img src="{% static 'book_app/default_book.png' %}" class="card-img-top" alt="No Image" />
+{% endif %}
+
           <div class="card-body">
             <h5 class="card-title">{{ book.book_title }}</h5>
             <p><i class="bi bi-person-fill"></i> {{ book.author }}</p>

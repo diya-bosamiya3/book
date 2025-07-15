@@ -8,34 +8,23 @@ from django.http import HttpRequest,HttpResponse
 from django.shortcuts import render
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+from django.contrib.auth.decorators import login_required
 
 def login(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        # ✅ Check if user exists in Nuser model (not LoginActivity)
-        try:
-            user = Nuser.objects.get(username=username)
-        except Nuser.DoesNotExist:
-            messages.error(request, 'You don’t have an account here. Please create one!')
-            return redirect('newacc')
-        
-        # ✅ Check if password matches
-        if user.password == password:
-            # ✅ Log activity
-            LoginActivity.objects.create(
-                username=user.username,
-                email=user.email,
-                login_time=datetime.now()
-            )
-           
+        user = authenticate(request, username=username, password=password)
+        if user:
+            auth_login(request, user)
             return redirect('dashboard')
         else:
-            messages.error(request, "Invalid password.")
+            messages.error(request, "Invalid credentials")
             return redirect('login')
-        
+
     return render(request, 'login.html')
+
 def newacc(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -47,22 +36,18 @@ def newacc(request):
             messages.error(request, "Passwords do not match.")
             return redirect('newacc')
 
-        user = Nuser(username=username, email=email, password=password)
-        print(username,email,password)
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return redirect('newacc')
+
+        user = User.objects.create_user(username=username, email=email, password=password)
         user.save()
 
-        # Also store to LoginActivity
-        LoginActivity.objects.create(
-            username=username,
-            email=email,
-            login_time=datetime.now()
-        )
-
-        
-        return redirect('dashboard')
+        return redirect('login')
 
     return render(request, 'newacc.html')
 
+@login_required(login_url="/")
 def dashboard(request):
     return render(request,"dashboard.html")
 
@@ -75,7 +60,7 @@ def base(request):
 def services(request):
     return render(request,'services.html')
 
-
+@login_required(login_url="/")
 def selling(request):
     if request.method == "POST":
         book = Book(
@@ -93,13 +78,14 @@ def selling(request):
         return redirect('book')
     return render(request, 'selling.html')
 
+@login_required(login_url="/")
 def book_display(request):
     books = Book.objects.all().order_by('-id')
     return render(request, 'books.html', {
         'books': books,
     })
 
-
+@login_required(login_url="/")
 def contact(request):
     if request.method=="POST":
         name=request.POST.get('name')
@@ -116,7 +102,7 @@ def contact(request):
 def booksel(request):
     return render(request,'booksel.html')
 
-
+@login_required(login_url="/")
 def payment(request, book_id):
     book = get_object_or_404(Book, id=book_id)
 
