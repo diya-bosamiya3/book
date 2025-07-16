@@ -1,28 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <title>Receipt</title>
     <style>
-        body { font-family: 'Arial'; padding: 20px; }
-        h1 { color: #4CAF50; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        body { font-family: Arial, sans-serif; font-size: 14px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .details { margin-bottom: 20px; }
+        .details td { padding: 5px; }
     </style>
 </head>
 <body>
-    <h1>Payment Receipt</h1>
-    <p><strong>Name:</strong> {{ order.name }}</p>
-    <p><strong>Order ID:</strong> #{{ order.id }}</p>
-    <p><strong>Book:</strong> {{ order.book.book_title }} by {{ order.book.author }}</p>
-    <p><strong>Amount:</strong> ₹{{ order.book.price }}</p>
-    <p><strong>Payment Mode:</strong> {{ order.get_payment_method_display }}</p>
-
-    {% if order.payment_method == 'credit' %}
-        <p><strong>Card:</strong> **** {{ order.card_num|slice:"-4:" }}</p>
-    {% elif order.payment_method == 'upi' %}
-        <p><strong>UPI ID:</strong> {{ order.upi_id }}</p>
-    {% elif order.payment_method == 'cash' %}
-        <p><strong>Address:</strong> {{ order.address }}</p>
-        <p><strong>Contact:</strong> {{ order.contact }}</p>
-    {% endif %}
+    <div class="header">
+        <h2>Book Bazaar - Payment Receipt</h2>
+        <p>Order ID: {{ order.id }}</p>
+        <p>Date: {{ order.timestamp|date:"d-m-Y H:i" }}</p>
+    </div>
+    <table class="details">
+        <tr><td><strong>Name:</strong></td><td>{{ order.name }}</td></tr>
+        <tr><td><strong>Book:</strong></td><td>{{ order.book.book_title }}</td></tr>
+        <tr><td><strong>Author:</strong></td><td>{{ order.book.author }}</td></tr>
+        <tr><td><strong>Price:</strong></td><td>₹{{ order.book.price }}</td></tr>
+        <tr><td><strong>Payment Method:</strong></td><td>{{ order.payment_method }}</td></tr>
+        <tr><td><strong>Contact:</strong></td><td>{{ order.contact }}</td></tr>
+        <tr><td><strong>Address:</strong></td><td>{{ order.address }}</td></tr>
+    </table>
+    <p>Thank you for shopping with Book Bazaar!</p>
 </body>
 </html>

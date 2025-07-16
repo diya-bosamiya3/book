@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Your Cart - Book Bazaar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, #fdfbfb, #ebedee);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .cart-item:hover {
+    transform: scale(1.01);
+  }
+
+  .cart-item img {
+    width: 150px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .cart-details {
+    flex: 1;
+  }
+
+  .cart-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border: none;
+  }
+
+  .btn-danger:hover {
+    background-color: #bb2d3b;
+  }
+
+  .cart-total {
+    text-align: right;
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+
+  .checkout-btn {
+    float: right;
+    margin-top: 10px;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+  <h2 class="mb-4"><i class="bi bi-cart4"></i> Your Cart</h2>
+
+  {% if items %}
+    {% for item in items %}
+    <div class="cart-item">
+      <img src="{% if item.book.book_photo %}{{ item.book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" alt="{{ item.book.book_title }}">
+      <div class="cart-details">
+        <h5>{{ item.book.book_title }}</h5>
+        <p><strong>Author:</strong> {{ item.book.author }}</p>
+        <p><strong>Price:</strong> ₹{{ item.book.price }}</p>
+      </div>
+      <div class="cart-actions">
+        <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-sm btn-danger">
+          <i class="bi bi-trash"></i> Remove
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+
+    <div class="cart-total">Total: ₹{{ total }}</div>
+    <a href="{% url 'checkout' %}" class="btn btn-success checkout-btn">
+      <i class="bi bi-bag-check"></i> Proceed to Checkout
+    </a>
+  {% else %}
+    <p>Your cart is empty.</p>
+  {% endif %}
+</div>
+{% endblock %}

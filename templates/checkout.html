@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Checkout - Book Bazaar{% endblock %}
+{% block body %}
+<div class="container mt-5">
+  <h2 class="mb-4"><i class="bi bi-credit-card"></i> Checkout</h2>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-md-6">
+        <h4>Books in Your Cart:</h4>
+        <ul class="list-group mb-4">
+          {% for item in items %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ item.book.book_title }}</span>
+            <strong>₹{{ item.book.price }}</strong>
+          </li>
+          {% endfor %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Total</span>
+            <strong>₹{{ total }}</strong>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-md-6">
+        <h4>Payment Info:</h4>
+        <div class="mb-3">
+          <label class="form-label">Payment Method</label>
+          <select class="form-select" name="payment_method" required onchange="toggleFields(this.value)">
+            <option value="credit">Credit Card</option>
+            <option value="upi">UPI</option>
+            <option value="cash">Cash on Delivery</option>
+          </select>
+        </div>
+
+        <div id="credit-fields">
+          <div class="mb-2"><input type="text" name="card_num" class="form-control" placeholder="Card Number"></div>
+          <div class="mb-2"><input type="text" name="expiry" class="form-control" placeholder="MM/YY"></div>
+          <div class="mb-2"><input type="text" name="cvv" class="form-control" placeholder="CVV"></div>
+        </div>
+
+        <div id="upi-field" class="mb-2" style="display:none;">
+          <input type="text" name="upi_id" class="form-control" placeholder="Your UPI ID">
+        </div>
+
+        <div class="mb-2"><input type="text" name="contact" class="form-control" placeholder="Contact Number" required></div>
+        <div class="mb-2"><textarea name="address" class="form-control" placeholder="Delivery Address" required></textarea></div>
+
+        <button type="submit" class="btn btn-success w-100 mt-3">Pay ₹{{ total }}</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+function toggleFields(method) {
+  document.getElementById('credit-fields').style.display = method === 'credit' ? 'block' : 'none';
+  document.getElementById('upi-field').style.display = method === 'upi' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}<title>AI Suggestions</title>{% endblock %}
+{% block body %}
+<div class="container mt-5 text-center">
+  <h2>📚 Book Suggestions</h2>
+  <p>Here are a few books you might enjoy:</p>
+
+  <ul class="list-group mt-4">
+    {% for book in suggestions %}
+    <li class="list-group-item">{{ book }}</li>
+    {% endfor %}
+  </ul>
+
+  <a href="{% url 'dashboard' %}" class="btn btn-primary mt-4">Back to Dashboard</a>
+</div>
+{% endblock %}

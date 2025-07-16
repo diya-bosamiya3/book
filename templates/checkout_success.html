@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}
+<title>Checkout Success</title>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  body {
+    background: linear-gradient(to right, #fdfbfb, #ebedee);
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .success-container {
+    padding: 60px 20px;
+    text-align: center;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 1s ease-out;
+  }
+
+  .success-icon {
+    font-size: 60px;
+    color: #28a745;
+    animation: pop 0.5s ease forwards;
+  }
+
+  h2 {
+    color: #28a745;
+    font-weight: 700;
+    margin-top: 20px;
+    animation: slideUp 0.6s ease forwards;
+  }
+
+  p {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 30px;
+    animation: fadeIn 1.5s ease forwards;
+  }
+
+  .btn {
+    padding: 12px 25px;
+    font-size: 16px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-primary:hover {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  /* Confetti animation background */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-image: url("https://cdn.pixabay.com/photo/2014/04/03/00/41/confetti-308384_1280.png");
+    background-repeat: repeat;
+    background-size: 200px;
+    opacity: 0.05;
+    pointer-events: none;
+    animation: scrollBG 40s linear infinite;
+  }
+
+  @keyframes scrollBG {
+    from { background-position: 0 0; }
+    to { background-position: 1000px 1000px; }
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes slideUp {
+    0% { transform: translateY(40px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="success-container">
+    <div class="success-icon">✅</div>
+    <h2>Payment Successful!</h2>
+    <p>Thank you for your order. Your books will be on their way to you soon! 📚🚚</p>
+
+    {% if payment %}
+      <a href="{% url 'download_receipt' payment.id %}" class="btn btn-outline-primary me-2">
+        <i class="bi bi-download"></i> Download Receipt
+      </a>
+    {% endif %}
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3">Go to Dashboard</a>
+  </div>
+</div>
+{% endblock %}

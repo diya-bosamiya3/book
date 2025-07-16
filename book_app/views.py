@@ -3,13 +3,36 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime
-from book_app.models import Nuser, LoginActivity, Book, Contact,Payment
+from book_app.models import Nuser, LoginActivity, Book, Contact,Payment,Cart,CartItem
 from django.http import HttpRequest,HttpResponse
+from openai import OpenAI
+import requests
+
+from django.conf import settings
 from django.shortcuts import render
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.contrib.auth.decorators import login_required
 
+
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+@login_required
+def ai_book_suggestions(request):
+    query = "science fiction"  # You can dynamically change this
+    response = requests.get(f"https://openlibrary.org/search.json?q={query}")
+    
+    if response.status_code == 200:
+        data = response.json()
+        books = data.get('docs', [])[:5]  # Get top 5 books
+        suggestions = [
+            f"{book.get('title')} by {', '.join(book.get('author_name', ['Unknown']))}"
+            for book in books
+        ]
+    else:
+        suggestions = ["Failed to fetch suggestions. Try again later."]
+
+    return render(request, 'ai_suggestions.html', {'suggestions': suggestions})
 def login(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -47,9 +70,19 @@ def newacc(request):
 
     return render(request, 'newacc.html')
 
-@login_required(login_url="/")
+@login_required
 def dashboard(request):
-    return render(request,"dashboard.html")
+    books = Book.objects.all()
+
+    cart_count = 0
+    if request.user.is_authenticated:
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart_count = cart.items.count()
+
+    return render(request, 'dashboard.html', {
+        'books': books,
+        'cart_count': cart_count,
+    })
 
 def base(request):
     userinfo=LoginActivity.objects.get()
@@ -78,11 +111,18 @@ def selling(request):
         return redirect('book')
     return render(request, 'selling.html')
 
-@login_required(login_url="/")
+@login_required
 def book_display(request):
     books = Book.objects.all().order_by('-id')
+
+    cart_count = 0
+    if request.user.is_authenticated:
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        cart_count = cart.items.count()
+
     return render(request, 'books.html', {
         'books': books,
+        'cart_count': cart_count,
     })
 
 @login_required(login_url="/")
@@ -99,8 +139,79 @@ def contact(request):
 
 
 
-def booksel(request):
-    return render(request,'booksel.html')
+@login_required
+def add_to_cart(request, book_id):
+    if request.method == "POST":
+        book = get_object_or_404(Book, id=book_id)
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+
+        if not CartItem.objects.filter(cart=cart, book=book).exists():
+            CartItem.objects.create(cart=cart, book=book)
+
+        return HttpResponse(status=204)  # Empty response for iframe
+
+    return HttpResponse(status=405)
+
+@login_required
+def view_cart(request):
+    # Get or create the cart for the current user
+    cart, created = Cart.objects.get_or_create(user=request.user)
+
+    # Fetch all items
+    items = cart.items.select_related('book')  # Optimized query
+
+    total = sum(item.book.price for item in items)
+
+    return render(request, 'view_cart.html', {
+        'cart': cart,
+        'items': items,
+        'total': total,
+    })
+
+@login_required
+def checkout(request):
+    cart = Cart.objects.get_or_create(user=request.user)[0]
+    items = CartItem.objects.filter(cart=cart)
+
+    if request.method == "POST":
+        name = request.user.username
+        payment_method = request.POST.get("payment_method")
+        card_num = request.POST.get("card_num")
+        expiry = request.POST.get("expiry")
+        cvv = request.POST.get("cvv")
+        upi_id = request.POST.get("upi_id")
+        address = request.POST.get("address")
+        contact = request.POST.get("contact")
+
+        for item in items:
+            Payment.objects.create(
+                book=item.book,
+                name=name,
+                payment_method=payment_method,
+                card_num=card_num if payment_method == 'credit' else '',
+                expiry=expiry if payment_method == 'credit' else '',
+                cvv=cvv if payment_method == 'credit' else '',
+                upi_id=upi_id if payment_method == 'upi' else '',
+                address=address,
+                contact=contact
+            )
+
+        # Clear cart after checkout
+        items.delete()
+        messages.success(request, "Payment successful for all books!")
+        return redirect('checkout_success')
+  # Or dashboard
+
+    total = sum(item.book.price for item in items)
+    return render(request, 'checkout.html', {'items': items, 'total': total})
+
+def remove_from_cart(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id)
+
+    if item.cart.user == request.user:
+        item.delete()
+
+    return redirect('view_cart')  # Make sure you have this view and template
 
 @login_required(login_url="/")
 def payment(request, book_id):
@@ -137,6 +248,7 @@ def success(request, payment_id):
     order = get_object_or_404(Payment, id=payment_id)
     return render(request, 'success.html', {'order': order})
 
+@login_required
 def download_receipt(request, payment_id):
     payment = get_object_or_404(Payment, id=payment_id)
     template_path = 'receipt.html'
@@ -150,5 +262,11 @@ def download_receipt(request, payment_id):
 
     pisa_status = pisa.CreatePDF(html, dest=response)
     if pisa_status.err:
-        return HttpResponse('We had some errors while generating the receipt.')
+        return HttpResponse('Error generating receipt.')
     return response
+
+@login_required
+def checkout_success(request):
+    # Get the latest payment by this user (optional but useful)
+    last_payment = Payment.objects.filter(name=request.user.username).last()
+    return render(request, 'checkout_success.html', {'payment': last_payment})

@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 from django.contrib.messages import constants as messages
 
+OPENAI_API_KEY = "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"
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

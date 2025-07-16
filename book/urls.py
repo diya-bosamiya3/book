@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from book_app.views import login,newacc,dashboard,base,contact,booksel,selling,services,payment,book_display,success,download_receipt
+from book_app.views import *
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -31,12 +31,20 @@ urlpatterns = [
     path('base/',base),
     path('contact/',contact,name='contact'),
     path('selling/',selling,name='selling'),
-    path('booksel/',booksel,name='booksel'),
+    path('cart/add/<int:book_id>/', add_to_cart, name='add_to_cart'),
+    path('cart/',view_cart, name='view_cart'),
+    path('cart/remove/<int:item_id>/',remove_from_cart, name='remove_from_cart'),
     path('services/',services,name='services'),
     path('books_display/',book_display,name='book'),
     path('payment/<int:book_id>/',payment, name='payment'),
     path('payment/success/<int:payment_id>/',success, name='success'),
-    path('receipt/<int:payment_id>/',download_receipt, name='download_receipt'),
+    path('receipt/<int:payment_id>/', download_receipt, name='download_receipt'),
+    path('checkout/success/', checkout_success, name='checkout_success'),
+    path('ai-suggestions/', ai_book_suggestions, name='ai_suggestions'),
+
+
+
+    path('checkout/', checkout, name='checkout'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

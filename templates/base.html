@@ -165,6 +165,11 @@
 .footer-column ul li {
   margin-bottom: 0.5rem;
 }
+#cart-count {
+  font-size: 0.7rem;
+  padding: 0.2em 0.4em;
+}
+
 
 .footer-column ul li a {
   color: #cccccc;         /* Soft gray for links */
@@ -172,6 +177,28 @@
   font-size: 0.95rem;
   transition: color 0.3s ease;
 }
+/* AI Suggestion Floating Button */
+.ai-suggest-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background-color: #f39c12;
+  color: white;
+  font-size: 24px;
+  padding: 16px;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  z-index: 1050;
+  text-align: center;
+  transition: transform 0.3s ease, background-color 0.3s;
+}
+
+.ai-suggest-btn:hover {
+  background-color: #e67e22;
+  transform: scale(1.1);
+  text-decoration: none;
+}
+
 
 .footer-column ul li a:hover {
   color: #ffffff;         /* Pure white on hover */
@@ -200,18 +227,34 @@
 </head>
 <body style="background-color: var(--vintage-light);">
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></div>
-    <h1 class="m-0">Book Bazaar</h1>
+ <!-- Topbar -->
+<div class="topbar">
+  <div class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></div>
+  <h1 class="m-0">Book Bazaar</h1>
 
-    {% if request.session.nuser_username or request.user.is_authenticated %}
-    <div class="user-section">
-      <span><i class="bi bi-person-circle"></i> Hi, {{ request.session.nuser_username|default:request.user.username }}</span>
-      <a href="{% url 'login'%}" class="btn btn-sm btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
-    </div>
-    {% endif %}
+  {% if request.session.nuser_username or request.user.is_authenticated %}
+  <div class="user-section">
+    <!-- Cart Icon -->
+<a href="{% url 'view_cart' %}" class="btn btn-success position-relative">
+  <i class="bi bi-cart-fill fs-5 text-white"></i> Cart
+  {% if request.user.is_authenticated and cart_count > 0 %}
+    <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+      {{ cart_count }}
+      <span class="visually-hidden">items in cart</span>
+    </span>
+  {% endif %}
+</a>
+
+
+
+
+    <!-- Username and Logout -->
+    <span><i class="bi bi-person-circle"></i> Hi, {{ request.session.nuser_username|default:request.user.username }}</span>
+    <a href="{% url 'login'%}" class="btn btn-sm btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
   </div>
+  {% endif %}
+</div>
+
 
   <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
@@ -223,6 +266,10 @@
     <a href="{% url 'selling' %}"><i class="bi bi-upload"></i> Sell a Book</a>
     <a href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a>
   </div>
+  <!-- AI Suggestion Button -->
+<a href="{% url 'ai_suggestions' %}" class="ai-suggest-btn" title="Get Book Suggestions">
+  <i class="bi bi-stars"></i>
+</a>
 
   <!-- Content -->
   <div class="content">
