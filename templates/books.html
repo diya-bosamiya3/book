@@ -10,12 +10,28 @@
 {% endblock %}
 
 {% block body %}
+
 <div class="container mb-5">
+<form method="get" class="search-form">
+  <div class="row align-items-center">
+    <div class="col-md-9 col-sm-8">
+      <input type="text" name="search" class="form-control" placeholder="Search books by title..." />
+    </div>
+    <div class="col-md-3 col-sm-4 mt-2 mt-sm-0">
+      <button type="submit" class="btn btn-success w-100">Search</button>
+    </div>
+  </div>
+</form>
+
   <div class="row g-4">
     {% for book in books %}
     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
       <div class="card book-card h-100">
-        <img src="{% if book.book_photo %}{{ book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" 
+        <img src="{% if book.book_photo %}
+                      {{ book.book_photo.url }}
+                  {% else %}
+                      {% static 'book_app/default_book.png' %}
+                  {% endif %}" 
              class="card-img-top" alt="{{ book.book_title }}" style="height:320px;">
         <div class="card-body">
           <h5 class="card-title">{{ book.book_title }}</h5>

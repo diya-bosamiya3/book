@@ -250,7 +250,7 @@
 
     <!-- Username and Logout -->
     <span><i class="bi bi-person-circle"></i> Hi, {{ request.session.nuser_username|default:request.user.username }}</span>
-    <a href="{% url 'login'%}" class="btn btn-sm btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    <a href="{% url 'logout_page'%}" class="btn btn-sm btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
   </div>
   {% endif %}
 </div>
@@ -261,7 +261,7 @@
     <a href="{% url 'dashboard' %}"><i class="bi bi-house-door"></i> Home</a>
     <a href="{% url 'services' %}"><i class="bi bi-tools"></i> Services</a>
     <a href="{% url 'book' %}"><i class="bi bi-book"></i> Books</a>
-    <a href="#"><i class="bi bi-info-circle"></i> About</a>
+    <a href="{% url 'submit_review' %}"><i class="bi bi-info-circle"></i> About</a>
     <a href="{% url 'contact' %}"><i class="bi bi-envelope"></i> Contact</a>
     <a href="{% url 'selling' %}"><i class="bi bi-upload"></i> Sell a Book</a>
     <a href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a>

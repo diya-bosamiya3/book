@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login,logout as auth_logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime
-from book_app.models import Nuser, LoginActivity, Book, Contact,Payment,Cart,CartItem
+from book_app.models import *
 from django.http import HttpRequest,HttpResponse
 from openai import OpenAI
+from django.utils.timezone import now
+
 import requests
 
 from django.conf import settings
@@ -19,7 +21,7 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 @login_required
 def ai_book_suggestions(request):
-    query = "science fiction"  # You can dynamically change this
+    query = "anime"  # You can dynamically change this
     response = requests.get(f"https://openlibrary.org/search.json?q={query}")
     
     if response.status_code == 200:
@@ -33,6 +35,7 @@ def ai_book_suggestions(request):
         suggestions = ["Failed to fetch suggestions. Try again later."]
 
     return render(request, 'ai_suggestions.html', {'suggestions': suggestions})
+
 def login(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -41,12 +44,30 @@ def login(request):
         user = authenticate(request, username=username, password=password)
         if user:
             auth_login(request, user)
+            
+            activity=LoginActivity.objects.create(user=user)
+            request.session['login_activity_id'] = activity.id
             return redirect('dashboard')
         else:
             messages.error(request, "Invalid credentials")
             return redirect('login')
+        
 
     return render(request, 'login.html')
+
+def logout_page(request):
+    activity_id=request.session.get('login_activity_id')
+    if activity_id:
+        try:
+            activity = LoginActivity.objects.get(id=activity_id, user=request.user)
+            activity.logout_time = now()
+            activity.save()
+        except LoginActivity.DoesNotExist:
+            pass
+
+    auth_logout(request)
+    request.session.flush()  # Clear session
+    return redirect('/')
 
 def newacc(request):
     if request.method == "POST":
@@ -114,7 +135,9 @@ def selling(request):
 @login_required
 def book_display(request):
     books = Book.objects.all().order_by('-id')
-
+    search=request.GET.get('search')
+    if search:
+        books = books.filter(book_title__icontains=search)
     cart_count = 0
     if request.user.is_authenticated:
         cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -158,9 +181,11 @@ def view_cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
 
     # Fetch all items
-    items = cart.items.select_related('book')  # Optimized query
+    items = CartItem.objects.filter(cart=cart)  # Optimized query
 
-    total = sum(item.book.price for item in items)
+    total = 0
+    for item in items:
+        total += item.book.price
 
     return render(request, 'view_cart.html', {
         'cart': cart,
@@ -270,3 +295,19 @@ def checkout_success(request):
     # Get the latest payment by this user (optional but useful)
     last_payment = Payment.objects.filter(name=request.user.username).last()
     return render(request, 'checkout_success.html', {'payment': last_payment})
+
+
+
+@login_required
+def submit_review(request):
+    if request.method == 'POST':
+        rating = int(request.POST['rating'])
+        comment = request.POST['comment']
+        Review.objects.create(user=request.user, rating=rating, comment=comment)
+        return render(request, 'reviews.html', {
+            'message': 'Thank you for your review!',
+            'reviews': Review.objects.order_by('-created_at')
+        })
+    return render(request, 'reviews.html', {
+        'reviews': Review.objects.order_by('-created_at')
+    })

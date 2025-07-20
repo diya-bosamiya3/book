@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Rate our App{% endblock title %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'book_app/reviews.css' %}">
+{% endblock extra_css %}
+{% block body %}
+
+<div class="review-container">
+  <h2>Leave a Review</h2>
+
+  <form method="POST" action="{% url 'submit_review' %}">
+    {% csrf_token %}
+    <div class="star-rating">
+      <input type="radio" name="rating" id="star5" value="5">
+      <label for="star5" data-value="5">★</label>
+
+      <input type="radio" name="rating" id="star4" value="4">
+      <label for="star4" data-value="4">★</label>
+
+      <input type="radio" name="rating" id="star3" value="3">
+      <label for="star3" data-value="3">★</label>
+
+      <input type="radio" name="rating" id="star2" value="2">
+      <label for="star2" data-value="2">★</label>
+
+      <input type="radio" name="rating" id="star1" value="1">
+      <label for="star1" data-value="1">★</label>
+    </div>
+
+    <textarea name="comment" placeholder="Write your thoughts here..." required></textarea>
+    <button type="submit">Submit Review</button>
+
+    {% if message %}
+      <div class="message">{{ message }}</div>
+    {% endif %}
+  </form>
+
+  <div class="review-list">
+    <h2>What Others Say</h2>
+    {% for review in reviews %}
+      <div class="review">
+        <div class="user">{{ review.user.username }} — {{ review.created_at|date:"d M Y H:i" }}</div>
+        <div class="stars">
+          {% for i in "12345"|slice:":review.rating"|make_list %}
+            <label>★</label>
+          {% endfor %}
+          {% for i in "12345"|slice:"review.rating:"|make_list %}
+            <label class="empty">★</label>
+          {% endfor %}
+        </div>
+        <div class="comment">{{ review.comment }}</div>
+      </div>
+    {% empty %}
+      <p>No reviews yet. Be the first to leave one!</p>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  const stars = document.querySelectorAll('.star-rating label');
+  let selected = 0;
+
+  stars.forEach((star, index) => {
+    star.addEventListener('mouseover', () => {
+      clearHover();
+      for (let i = 0; i <= index; i++) {
+        stars[i].classList.add('hover');
+      }
+    });
+
+    star.addEventListener('mouseout', () => {
+      clearHover();
+    });
+
+    star.addEventListener('click', () => {
+      selected = parseInt(star.getAttribute('data-value'));
+      clearSelected();
+      for (let i = 0; i < selected; i++) {
+        stars[i].classList.add('selected');
+      }
+      // Set corresponding radio input
+      document.getElementById('star' + selected).checked = true;
+    });
+  });
+
+  function clearHover() {
+    stars.forEach(star => star.classList.remove('hover'));
+  }
+
+  function clearSelected() {
+    stars.forEach(star => star.classList.remove('selected'));
+  }
+</script>
+
+{% endblock body %}

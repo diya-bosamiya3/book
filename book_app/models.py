@@ -1,6 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import timedelta
 
+
+class OrderedUser(User):
+    class Meta:
+        proxy = True
+        ordering = ['-date_joined']
 # Book Model
 class Book(models.Model):
     name = models.CharField(max_length=100)
@@ -43,12 +49,20 @@ class Nuser(models.Model):
         return f"{self.username} logged in"
 
 class LoginActivity(models.Model):
+    user=models.ForeignKey(User,on_delete=models.CASCADE)
     username = models.CharField(max_length=126, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
-    login_time = models.DateTimeField()
+    login_time = models.DateTimeField(auto_now_add=True)
+    logout_time = models.DateTimeField(null=True, blank=True)
+
+    def session_duration(self):
+        if self.logout_time:
+            return self.logout_time - self.login_time
+        return None
+
 
     def __str__(self):
-        return f"{self.username} logged in at {self.login_time}"
+        return f"{self.user.username} | Login: {self.login_time} | Logout: {self.logout_time or 'Active'}"
 
 # Contact
 class Contact(models.Model):
@@ -83,3 +97,9 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.name} paid for {self.book.book_title} via {self.payment_method}"
+    
+class Review(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.IntegerField()
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
