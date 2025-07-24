@@ -1,32 +1,32 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login as auth_login,logout as auth_logout
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from datetime import datetime
-from book_app.models import *
-from django.http import HttpRequest,HttpResponse
-from openai import OpenAI
 from django.utils.timezone import now
-
-import requests
-
-from django.conf import settings
-from django.shortcuts import render
-from django.template.loader import get_template
-from xhtml2pdf import pisa
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.conf import settings
+from django.template.loader import get_template
+from django.views.decorators.http import require_POST
 
+from datetime import datetime
+from xhtml2pdf import pisa
+import requests
+from openai import OpenAI
+
+from book_app.models import *
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+
 @login_required
 def ai_book_suggestions(request):
-    query = "anime"  # You can dynamically change this
+    query = "anime"
     response = requests.get(f"https://openlibrary.org/search.json?q={query}")
-    
+
     if response.status_code == 200:
         data = response.json()
-        books = data.get('docs', [])[:5]  # Get top 5 books
+        books = data.get('docs', [])[:5]
         suggestions = [
             f"{book.get('title')} by {', '.join(book.get('author_name', ['Unknown']))}"
             for book in books
@@ -36,6 +36,7 @@ def ai_book_suggestions(request):
 
     return render(request, 'ai_suggestions.html', {'suggestions': suggestions})
 
+
 def login(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -44,19 +45,18 @@ def login(request):
         user = authenticate(request, username=username, password=password)
         if user:
             auth_login(request, user)
-            
-            activity=LoginActivity.objects.create(user=user)
+            activity = LoginActivity.objects.create(user=user)
             request.session['login_activity_id'] = activity.id
             return redirect('dashboard')
         else:
             messages.error(request, "Invalid credentials")
             return redirect('login')
-        
 
     return render(request, 'login.html')
 
+
 def logout_page(request):
-    activity_id=request.session.get('login_activity_id')
+    activity_id = request.session.get('login_activity_id')
     if activity_id:
         try:
             activity = LoginActivity.objects.get(id=activity_id, user=request.user)
@@ -66,8 +66,9 @@ def logout_page(request):
             pass
 
     auth_logout(request)
-    request.session.flush()  # Clear session
+    request.session.flush()
     return redirect('/')
+
 
 def newacc(request):
     if request.method == "POST":
@@ -84,37 +85,33 @@ def newacc(request):
             messages.error(request, "Username already exists.")
             return redirect('newacc')
 
-        user = User.objects.create_user(username=username, email=email, password=password)
-        user.save()
-
+        User.objects.create_user(username=username, email=email, password=password)
         return redirect('login')
 
     return render(request, 'newacc.html')
 
+
 @login_required
 def dashboard(request):
     books = Book.objects.all()
-
     cart_count = 0
-    if request.user.is_authenticated:
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        cart_count = cart.items.count()
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_count = cart.items.count()
 
-    return render(request, 'dashboard.html', {
-        'books': books,
-        'cart_count': cart_count,
-    })
+    return render(request, 'dashboard.html', {'books': books, 'cart_count': cart_count})
 
+
+@login_required
 def base(request):
-    userinfo=LoginActivity.objects.get()
-    return render(request,'base.html',{
-        'userinfo':userinfo
-    })
+    userinfo = LoginActivity.objects.filter(user=request.user).order_by('-id').first()
+    return render(request, 'base.html', {'userinfo': userinfo})
+
 
 def services(request):
-    return render(request,'services.html')
+    return render(request, 'services.html')
 
-@login_required(login_url="/")
+
+@login_required
 def selling(request):
     if request.method == "POST":
         book = Book(
@@ -132,34 +129,32 @@ def selling(request):
         return redirect('book')
     return render(request, 'selling.html')
 
+
 @login_required
 def book_display(request):
     books = Book.objects.all().order_by('-id')
-    search=request.GET.get('search')
+    search = request.GET.get('search')
     if search:
         books = books.filter(book_title__icontains=search)
-    cart_count = 0
-    if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(user=request.user)
-        cart_count = cart.items.count()
 
-    return render(request, 'books.html', {
-        'books': books,
-        'cart_count': cart_count,
-    })
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    cart_count = cart.items.count()
 
-@login_required(login_url="/")
+    return render(request, 'books.html', {'books': books, 'cart_count': cart_count})
+
+
+@login_required
 def contact(request):
-    if request.method=="POST":
-        name=request.POST.get('name')
-        email=request.POST.get('email')
-        phone=request.POST.get('phone')
-        message=request.POST.get('message')
-        contact=Contact(name=name,email=email,phone=phone,message=message,date=datetime.today())
-        contact.save()
+    if request.method == "POST":
+        Contact.objects.create(
+            name=request.POST.get('name'),
+            email=request.POST.get('email'),
+            phone=request.POST.get('phone'),
+            message=request.POST.get('message'),
+            date=datetime.today()
+        )
         messages.success(request, "Your message has been sent.")
-    return render(request,'contact.html')
-
+    return render(request, 'contact.html')
 
 
 @login_required
@@ -171,74 +166,87 @@ def add_to_cart(request, book_id):
         if not CartItem.objects.filter(cart=cart, book=book).exists():
             CartItem.objects.create(cart=cart, book=book)
 
-        return HttpResponse(status=204)  # Empty response for iframe
-
+        return HttpResponse(status=204)
     return HttpResponse(status=405)
+
 
 @login_required
 def view_cart(request):
-    # Get or create the cart for the current user
     cart, created = Cart.objects.get_or_create(user=request.user)
+    items = cart.items.select_related('book')
+    total = sum(item.book.price for item in items)
 
-    # Fetch all items
-    items = CartItem.objects.filter(cart=cart)  # Optimized query
+    return render(request, 'view_cart.html', {'cart': cart, 'items': items, 'total': total})
 
-    total = 0
-    for item in items:
-        total += item.book.price
-
-    return render(request, 'view_cart.html', {
-        'cart': cart,
-        'items': items,
-        'total': total,
-    })
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Cart, CartItem, Payment, OrderedBook
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import Cart, CartItem, Payment, OrderedBook
 
 @login_required
 def checkout(request):
-    cart = Cart.objects.get_or_create(user=request.user)[0]
+    cart = Cart.objects.get(user=request.user)
     items = CartItem.objects.filter(cart=cart)
+    total = sum(item.book.price for item in items)
 
     if request.method == "POST":
-        name = request.user.username
-        payment_method = request.POST.get("payment_method")
-        card_num = request.POST.get("card_num")
-        expiry = request.POST.get("expiry")
-        cvv = request.POST.get("cvv")
-        upi_id = request.POST.get("upi_id")
-        address = request.POST.get("address")
-        contact = request.POST.get("contact")
+        name = request.user.username  # Auto-filled name from logged-in user
+        payment_method = request.POST.get('payment_method')
+        card_num = request.POST.get('card_num')
+        upi_id = request.POST.get('upi_id')
+        address = request.POST.get('address')
+        contact = request.POST.get('contact')
 
+        if not name:
+            return render(request, "checkout.html", {
+                "items": items,
+                "total": total,
+                "error": "Name is required.",
+            })
+
+        # Create Payment record
+        payment = Payment.objects.create(
+            user=request.user,
+            name=name,
+            payment_method=payment_method,
+            card_num=card_num if card_num else None,
+            upi_id=upi_id if upi_id else None,
+            address=address,
+            contact=contact
+        )
+
+        # Create OrderedBook entries
         for item in items:
-            Payment.objects.create(
-                book=item.book,
-                name=name,
-                payment_method=payment_method,
-                card_num=card_num if payment_method == 'credit' else '',
-                expiry=expiry if payment_method == 'credit' else '',
-                cvv=cvv if payment_method == 'credit' else '',
-                upi_id=upi_id if payment_method == 'upi' else '',
-                address=address,
-                contact=contact
+            OrderedBook.objects.create(
+                payment=payment,
+                book=item.book
             )
+            item.book.is_sold = True  # Optional: track sold books
+            item.book.save()
 
-        # Clear cart after checkout
+        # Clear the cart
         items.delete()
-        messages.success(request, "Payment successful for all books!")
-        return redirect('checkout_success')
-  # Or dashboard
 
-    total = sum(item.book.price for item in items)
-    return render(request, 'checkout.html', {'items': items, 'total': total})
+        return redirect("success", payment_id=payment.id)
 
+    return render(request, "checkout.html", {
+        "items": items,
+        "total": total
+    })
+
+@login_required
 def remove_from_cart(request, item_id):
     item = get_object_or_404(CartItem, id=item_id)
-
     if item.cart.user == request.user:
         item.delete()
+    return redirect('view_cart')
 
-    return redirect('view_cart')  # Make sure you have this view and template
 
-@login_required(login_url="/")
+@login_required
 def payment(request, book_id):
     book = get_object_or_404(Book, id=book_id)
 
@@ -269,9 +277,15 @@ def payment(request, book_id):
     return render(request, "payment.html", {"book": book})
 
 
+@login_required
 def success(request, payment_id):
-    order = get_object_or_404(Payment, id=payment_id)
-    return render(request, 'success.html', {'order': order})
+    payment = Payment.objects.get(id=payment_id, user=request.user)
+    ordered_books = OrderedBook.objects.filter(payment=payment).select_related('book')
+
+    return render(request, "success.html", {
+        "payment": payment,
+        "ordered_books": ordered_books
+    })
 
 @login_required
 def download_receipt(request, payment_id):
@@ -290,12 +304,11 @@ def download_receipt(request, payment_id):
         return HttpResponse('Error generating receipt.')
     return response
 
+
 @login_required
 def checkout_success(request):
-    # Get the latest payment by this user (optional but useful)
     last_payment = Payment.objects.filter(name=request.user.username).last()
     return render(request, 'checkout_success.html', {'payment': last_payment})
-
 
 
 @login_required
@@ -311,3 +324,21 @@ def submit_review(request):
     return render(request, 'reviews.html', {
         'reviews': Review.objects.order_by('-created_at')
     })
+
+
+@require_POST
+@login_required
+def add_to_wishlist(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    Wishlist.objects.get_or_create(user=request.user, book=book)
+    return HttpResponse(status=204)
+
+@login_required
+def remove_from_wishlist(request, book_id):
+    Wishlist.objects.filter(user=request.user, book_id=book_id).delete()
+    return redirect('wishlist_view')
+
+@login_required
+def wishlist_view(request):
+    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('book')
+    return render(request, 'wishlist.html', {'wishlist_items': wishlist_items})

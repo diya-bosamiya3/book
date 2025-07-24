@@ -5,49 +5,137 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'book_app/selling.css' %}">
 {% endblock extra_css %}
+.sell-box-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, #e8f5e9, #ffffff);
+}
 
+.sell-box {
+  background: #ffffff;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  max-width: 850px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 2px solid #b2dfdb;
+  animation: fadeIn 0.6s ease-in;
+}
+
+.sell-box h2 {
+  font-size: 2.4rem;
+  color: #004d40;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.sell-box .intro {
+  text-align: center;
+  font-size: 1rem;
+  color: #616161;
+  margin-bottom: 2rem;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+}
+
+.input-grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+textarea {
+  margin-top: 1.4rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 768px) {
+  .input-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sell-box {
+    padding: 2rem 1.2rem;
+  }
+}
 {% block body %}
-<div class="container">
-    <h2>Sell Your Old Book</h2>
+<div class="sell-box-wrapper">
+  <div class="sell-box">
+    <h2>📚 Sell Your Old Book</h2>
+    <p class="intro">Fill in the details below and give your book a new home!</p>
+
     <form action="{% url 'selling' %}" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    <label for="name">Your Name:</label>
-        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+      {% csrf_token %}
+      <div class="input-grid">
+        <div>
+          <label for="name">Your Name:</label>
+          <input type="text" id="name" name="name" placeholder="Enter your name" required>
+        </div>
 
-        <label for="email">Your Email:</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        <div>
+          <label for="email">Your Email:</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
 
-        <label for="phone">Phone Number:</label>
-        <input type="tel" id="phone" name="phone" placeholder="Your phone number" required>
+        <div>
+          <label for="phone">Phone Number:</label>
+          <input type="tel" id="phone" name="phone" placeholder="Your phone number" required>
+        </div>
 
-        <label for="title">Book Title:</label>
-<input type="text" id="title" name="title" placeholder="Title of the book" required>
+        <div>
+          <label for="title">Book Title:</label>
+          <input type="text" id="title" name="title" placeholder="Title of the book" required>
+        </div>
 
-        <label for="author">Author:</label>
-        <input type="text" id="author" name="author" placeholder="Author of the book" required>
+        <div>
+          <label for="author">Author:</label>
+          <input type="text" id="author" name="author" placeholder="Author of the book" required>
+        </div>
 
-        <label for="condition">Book Condition:</label>
-        <select id="condition" name="condition" required>
+        <div>
+          <label for="condition">Book Condition:</label>
+          <select id="condition" name="condition" required>
             <option value="" disabled selected>Select Condition</option>
             <option value="New">New</option>
             <option value="Like New">Like New</option>
             <option value="Good">Good</option>
-            <option value="Fair">Fair</option> 
+            <option value="Fair">Fair</option>
             <option value="Used">Used</option>
-        </select>
+          </select>
+        </div>
 
-        <label for="price">Your Asking Price (INR):</label>
-        <input type="number" id="price" name="price" placeholder="Expected price" required>
+        <div>
+          <label for="price">Your Asking Price (INR):</label>
+          <input type="number" id="price" name="price" placeholder="Expected price" required>
+        </div>
 
-        <!-- ✅ Added file input -->
-        <label for="book_photo">Upload Book Photo:</label>
-        <input type="file" id="photo" name="photo" accept="image/*" required>
+        <div>
+          <label for="book_photo">Upload Book Photo:</label>
+          <input type="file" id="photo" name="photo" accept="image/*" required>
+        </div>
+      </div>
 
-        <label for="description">Description (Optional):</label>
-        <textarea id="description" name="description" placeholder="Additional details about the book..." rows="4"></textarea>
+      <label for="description">Description (Optional):</label>
+      <textarea id="description" name="description" placeholder="Additional details about the book..." rows="4"></textarea>
 
-    <button type="submit">Submit</button>
-
-</form>
+      <button type="submit">📤 Submit Book for Sale</button>
+    </form>
+  </div>
 </div>
 {% endblock body %}

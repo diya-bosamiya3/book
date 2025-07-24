@@ -26,7 +26,7 @@ admin.site.index_title = "Welcome to the managing page"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',login,name='login'),
-    path('logout/',logout_page,name='logout_page'),
+    path('logout/',logout_page,name='logout'),
     path('newacc/',newacc,name='newacc'),
     path('dashboard/',dashboard,name='dashboard'),
     path('base/',base),
@@ -43,6 +43,10 @@ urlpatterns = [
     path('checkout/success/', checkout_success, name='checkout_success'),
     path('ai-suggestions/', ai_book_suggestions, name='ai_suggestions'),
     path('reviews/',submit_review, name='submit_review'),
+    path('wishlist/',wishlist_view, name='wishlist_view'),
+    path('wishlist/add/<int:book_id>/', add_to_wishlist, name='add_to_wishlist'),
+
+    path('wishlist/remove/<int:book_id>/', remove_from_wishlist, name='remove_from_wishlist'),
 
 
 

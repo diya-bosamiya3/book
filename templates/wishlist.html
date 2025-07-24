@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}<title>Your Wishlist</title>{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+  <h2 class="text-center mb-4">💖 Your Wishlist</h2>
+  <div class="row">
+    {% for item in wishlist_items %}
+    <div class="col-md-3 col-sm-6 mb-4">
+      <div class="card shadow-sm h-100">
+        <img src="{% if item.book.book_photo %}
+                    {{ item.book.book_photo.url }}
+                  {% else %}
+                    {% static 'book_app/default_book.png' %}
+                  {% endif %}" 
+             class="card-img-top" alt="{{ item.book.book_title }}" 
+             style="height: 220px; object-fit: cover;">
+
+        <div class="card-body p-2 text-center">
+          <h6 class="card-title mb-1">{{ item.book.book_title|truncatechars:30 }}</h6>
+          <p class="mb-2 text-muted">₹{{ item.book.price }}</p>
+          <div class="d-flex justify-content-center gap-2">
+            <a href="{% url 'remove_from_wishlist' item.book.id %}" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-x-circle"></i> Remove
+            </a>
+            <a href="{% url 'add_to_cart' item.book.id %}" class="btn btn-sm btn-success">
+              <i class="bi bi-cart-plus"></i> Add
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+      <p class="text-center mt-5">You haven't added any books yet! 🧐</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

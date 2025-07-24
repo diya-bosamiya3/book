@@ -6,100 +6,86 @@
 <link rel="stylesheet" href="{% static 'book_app/contact.css' %}">
 {% endblock extra_css %}
 
-
 {% block body %}
-    <main class="main-content">
-        <section class="card text-center">
-            <h1>Contact Us</h1>
-            <p>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
-        </section>
+<main class="main-content">
+  <section class="card text-center">
+    <h1>Contact Us</h1>
+    <p>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+  </section>
 
-        <div class="grid grid-3">
-            <div class="card">
-                <h2>📍 Visit Our Store</h2>
-                <p><strong>Vintage Books</strong></p>
-                <p>123 Literary Lane<br>
-                Booktown, BT 12345<br>
-                United States</p>
-                <p><strong>Hours:</strong><br>
-                Mon-Fri: 9:00 AM - 7:00 PM<br>
-                Sat: 10:00 AM - 6:00 PM<br>
-                Sun: 12:00 PM - 5:00 PM</p>
-            </div>
+  <div class="grid grid-3">
+    <div class="card">
+      <h2>📍 Visit Our Store</h2>
+      <p><strong>Vintage Books</strong></p>
+      <p>123 Literary Lane<br> Booktown, BT 12345<br> United States</p>
+      <p><strong>Hours:</strong><br> Mon-Fri: 9:00 AM - 7:00 PM<br> Sat: 10:00 AM - 6:00 PM<br> Sun: 12:00 PM - 5:00 PM</p>
+    </div>
 
-            <div class="card">
-                <h2>📞 Call Us</h2>
-                <p><strong>Phone:</strong> (555) 123-4567</p>
-                <p><strong>Toll Free:</strong> 1-800-VINTAGE</p>
-                <p><strong>Fax:</strong> (555) 123-4568</p>
-                <br>
-                <p><strong>Customer Service Hours:</strong><br>
-                Monday - Friday: 8:00 AM - 8:00 PM<br>
-                Saturday: 9:00 AM - 6:00 PM<br>
-                Sunday: 10:00 AM - 4:00 PM</p>
-            </div>
+    <div class="card">
+      <h2>📞 Call Us</h2>
+      <p><strong>Phone:</strong> (555) 123-4567</p>
+      <p><strong>Toll Free:</strong> 1-800-VINTAGE</p>
+      <p><strong>Fax:</strong> (555) 123-4568</p>
+      <br>
+      <p><strong>Customer Service Hours:</strong><br> Monday - Friday: 8:00 AM - 8:00 PM<br> Saturday: 9:00 AM - 6:00 PM<br> Sunday: 10:00 AM - 4:00 PM</p>
+    </div>
 
-            <div class="card">
-                <h2>✉️ Email Us</h2>
-                <p><strong>General Inquiries:</strong><br>
-                info@vintagebooks.com</p>
-                <p><strong>Book Appraisals:</strong><br>
-                appraisal@vintagebooks.com</p>
-                <p><strong>Selling Books:</strong><br>
-                sell@vintagebooks.com</p>
-                <p><strong>Customer Support:</strong><br>
-                support@vintagebooks.com</p>
-            </div>
+    <div class="card">
+      <h2>✉️ Email Us</h2>
+      <p><strong>General Inquiries:</strong><br> info@vintagebooks.com</p>
+      <p><strong>Book Appraisals:</strong><br> appraisal@vintagebooks.com</p>
+      <p><strong>Selling Books:</strong><br> sell@vintagebooks.com</p>
+      <p><strong>Customer Support:</strong><br> support@vintagebooks.com</p>
+    </div>
+  </div>
+
+  <!-- Contact Form Section -->
+  <section class="form-section">
+    <div class="form-container">
+      <h2>Feedback Form</h2>
+      <form action="" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" required placeholder="Enter your name">
         </div>
 
-       <!-- Contact Form Section -->
-<section class="form-section">
-  <div class="form-container">
-    <h2>Feedback Form</h2>
-    <form action="" method="post">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="name">Full Name</label>
-        <input type="text" id="name" name="name" required placeholder="Enter your name">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required placeholder="Enter your email">
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" required placeholder="10-digit phone number">
+        </div>
+
+        <div class="form-group">
+          <label for="message">Your Message</label>
+          <textarea id="message" name="message" required placeholder="Write your message..."></textarea>
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="card-mg4">
+    <h2 class="text-center">Frequently Asked Questions</h2>
+    <div class="grid grid-3">
+      <div>
+        <h3 class="text-brown">How do I sell my books?</h3>
+        <p>Visit our "Sell Books" page to get started. You can either bring books to our store or request a free appraisal online.</p>
       </div>
-
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" required placeholder="Enter your email">
+      <div>
+        <h3 class="text-brown">Do you authenticate books?</h3>
+        <p>Yes! All rare and collectible books are authenticated by our team of experts before being listed for sale.</p>
       </div>
-
-      <div class="form-group">
-        <label for="phone">Phone Number</label>
-        <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" required placeholder="10-digit phone number">
+      <div>
+        <h3 class="text-brown">What's your return policy?</h3>
+        <p>We offer a 30-day money-back guarantee on all purchases. Books must be returned in the same condition.</p>
       </div>
-
-      <div class="form-group">
-        <label for="message">Your Message</label>
-        <textarea id="message" name="message" required placeholder="Write your message..."></textarea>
-      </div>
-
-      <button type="submit">Submit</button>
-    </form>
-  </div>
-</section>
-
-        <section class="card-mg4">
-            <h2 class="text-center">Frequently Asked Questions</h2>
-            <div class="grid grid-3">
-                <div>
-                    <h3 class="text-brown">How do I sell my books?</h3>
-                    <p>Visit our "Sell Books" page to get started. You can either bring books to our store or request a free appraisal online.</p>
-                </div>
-                <div>
-                    <h3 class="text-brown">Do you authenticate books?</h3>
-                    <p>Yes! All rare and collectible books are authenticated by our team of experts before being listed for sale.</p>
-                </div>
-                <div>
-                    <h3 class="text-brown">What's your return policy?</h3>
-                    <p>We offer a 30-day money-back guarantee on all purchases. Books must be returned in the same condition.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
+    </div>
+  </section>
+</main>
 {% endblock body %}

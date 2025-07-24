@@ -1,13 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import timedelta
 
-
-class OrderedUser(User):
-    class Meta:
-        proxy = True
-        ordering = ['-date_joined']
-# Book Model
+    
 class Book(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
@@ -22,7 +16,17 @@ class Book(models.Model):
     def __str__(self):
         return self.book_title
 
-# Cart Models
+class Wishlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'book')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.book.book_title}"
+
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
@@ -32,6 +36,7 @@ class Cart(models.Model):
     def total_price(self):
         return sum(item.book.price for item in self.items.all())
 
+
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -39,7 +44,7 @@ class CartItem(models.Model):
     def __str__(self):
         return f"{self.book.book_title} in {self.cart.user.username}'s cart"
 
-# Optional if you're using your own login system
+
 class Nuser(models.Model):
     username = models.CharField(max_length=126)
     email = models.EmailField()
@@ -48,8 +53,9 @@ class Nuser(models.Model):
     def __str__(self):
         return f"{self.username} logged in"
 
+
 class LoginActivity(models.Model):
-    user=models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     username = models.CharField(max_length=126, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     login_time = models.DateTimeField(auto_now_add=True)
@@ -60,11 +66,10 @@ class LoginActivity(models.Model):
             return self.logout_time - self.login_time
         return None
 
-
     def __str__(self):
         return f"{self.user.username} | Login: {self.login_time} | Logout: {self.logout_time or 'Active'}"
 
-# Contact
+
 class Contact(models.Model):
     name = models.CharField(max_length=123)
     email = models.CharField(max_length=123)
@@ -75,7 +80,7 @@ class Contact(models.Model):
     def __str__(self):
         return self.name
 
-# Payment
+
 class Payment(models.Model):
     PAYMENT_METHODS = [
         ('credit', 'Credit Card'),
@@ -83,9 +88,9 @@ class Payment(models.Model):
         ('cash', 'Cash'),
     ]
 
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
+    name = models.CharField(max_length=100)
 
     card_num = models.CharField(max_length=16, blank=True, null=True)
     expiry = models.CharField(max_length=5, blank=True, null=True)
@@ -96,8 +101,17 @@ class Payment(models.Model):
     contact = models.CharField(max_length=15, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name} paid for {self.book.book_title} via {self.payment_method}"
-    
+        return f"{self.name} paid via {self.payment_method}"
+
+
+class OrderedBook(models.Model):
+    payment = models.ForeignKey(Payment, related_name='books', on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.book.book_title} in Payment #{self.payment.id}"
+
+
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     rating = models.IntegerField()

@@ -1,93 +1,105 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Payment Complete{% endblock title %}
+{% block title %}Payment Successful{% endblock title %}
 
 {% block extra_css %}
 <style>
   body {
-    background: linear-gradient(to right, #fdfbfb, #ebedee);
+    background: linear-gradient(to right, #f8f9fa, #e2e8f0);
     font-family: 'Segoe UI', sans-serif;
   }
 
   .confirmation {
-    max-width: 800px;
-    margin: 5rem auto;
-    padding: 3rem;
+    max-width: 1000px;
+    margin: 4rem auto;
+    padding: 2.5rem;
     background-color: #ffffff;
     border-radius: 20px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
     text-align: center;
   }
 
-  .confirmation img {
-    width: 160px;
-    height: 220px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 1.2rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  }
-
   .confirmation h1 {
-    color: #2f855a;
-    font-size: 2.4rem;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
+    color: #38a169;
+    font-size: 2.8rem;
+    margin-bottom: 1.2rem;
+    font-weight: bold;
   }
 
   .confirmation p {
     color: #4a5568;
-    font-size: 1.05rem;
-    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
   }
 
   .summary {
     background-color: #f7fafc;
-    border-radius: 12px;
-    padding: 2rem;
+    border-radius: 16px;
+    padding: 1.5rem;
     text-align: left;
-    margin-top: 2rem;
-    border: 1px solid #e2e8f0;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .summary img {
+    width: 140px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+  }
+
+  .summary-content {
+    flex: 1;
   }
 
   .summary h3 {
     font-size: 1.4rem;
-    margin-bottom: 1.2rem;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 0.6rem;
+    margin-bottom: 1rem;
     color: #2d3748;
+    font-weight: 600;
   }
 
-  .summary .row {
+  .row {
     display: flex;
     justify-content: space-between;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid #edf2f7;
-  }
-
-  .summary .row span {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #e2e8f0;
     font-size: 1rem;
   }
 
-  .summary .row strong {
+  .row span {
+    color: #4a5568;
+  }
+
+  .row strong {
     color: #2c5282;
   }
 
   .actions {
-    margin-top: 2.5rem;
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
   }
 
   .btn-primary {
     background: linear-gradient(to right, #667eea, #764ba2);
     color: white;
-    padding: 0.8rem 1.6rem;
+    padding: 0.9rem 2rem;
     border-radius: 12px;
     font-weight: 600;
     font-size: 1rem;
     border: none;
     text-decoration: none;
-    margin-right: 1rem;
-    transition: background 0.3s;
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
   }
 
   .btn-primary:hover {
@@ -95,14 +107,14 @@
   }
 
   .btn-outline {
-    padding: 0.75rem 1.5rem;
+    padding: 0.9rem 2rem;
     border: 2px solid #667eea;
     color: #667eea;
     border-radius: 12px;
     text-decoration: none;
     font-weight: 600;
     font-size: 1rem;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease;
   }
 
   .btn-outline:hover {
@@ -113,64 +125,37 @@
 
 {% block body %}
 <div class="confirmation">
-  <img src="{{ order.book.book_photo.url }}" alt="{{ order.book.book_title }}" />
-
   <h1>Payment Successful!</h1>
-  <p>Thank you <strong>{{ order.name }}</strong> for your order. <br>Your book is now reserved and will be processed shortly.</p>
+  <p>Thank you <strong>{{ payment.name }}</strong> for your order. <br>Your books are now reserved and will be processed shortly.</p>
 
+  {% for item in ordered_books %}
   <div class="summary">
-    <h3>Order Summary</h3>
+    <img src="{{ item.book.book_photo.url }}" alt="{{ item.book.book_title }}" />
+    <div class="summary-content">
+      <h3>Book {{ forloop.counter }}</h3>
+      <div class="row"><span><strong>Order ID:</strong></span><span>#{{ item.id }}</span></div>
+      <div class="row"><span><strong>Title:</strong></span><span>{{ item.book.book_title }}</span></div>
+      <div class="row"><span><strong>Author:</strong></span><span>{{ item.book.author }}</span></div>
+      <div class="row"><span><strong>Price:</strong></span><span>₹{{ item.book.price }}</span></div>
+      <div class="row"><span><strong>Payment Mode:</strong></span><span>{{ payment.get_payment_method_display }}</span></div>
 
-    <div class="row">
-      <span><strong>Order ID:</strong></span>
-      <span>#{{ order.id }}</span>
+      {% if payment.payment_method == 'credit' %}
+      <div class="row"><span><strong>Card Ending:</strong></span><span>**** {{ payment.card_num|slice:"-4:" }}</span></div>
+      {% elif payment.payment_method == 'upi' %}
+      <div class="row"><span><strong>UPI ID:</strong></span><span>{{ payment.upi_id }}</span></div>
+      {% elif payment.payment_method == 'cash' %}
+      <div class="row"><span><strong>Address:</strong></span><span>{{ payment.address }}</span></div>
+      <div class="row"><span><strong>Contact No.:</strong></span><span>{{ payment.contact }}</span></div>
+      {% endif %}
     </div>
-    <div class="row">
-      <span><strong>Book Title:</strong></span>
-      <span>{{ order.book.book_title }}</span>
-    </div>
-    <div class="row">
-      <span><strong>Author:</strong></span>
-      <span>{{ order.book.author }}</span>
-    </div>
-    <div class="row">
-      <span><strong>Price:</strong></span>
-      <span>₹{{ order.book.price }}</span>
-    </div>
-    <div class="row">
-      <span><strong>Payment Mode:</strong></span>
-      <span>{{ order.get_payment_method_display }}</span>
-    </div>
-
-    {% if order.payment_method == 'credit' %}
-    <div class="row">
-      <span><strong>Card Ending:</strong></span>
-      <span>**** {{ order.card_num|slice:"-4:" }}</span>
-    </div>
-    {% elif order.payment_method == 'upi' %}
-    <div class="row">
-      <span><strong>UPI ID:</strong></span>
-      <span>{{ order.upi_id }}</span>
-    </div>
-    {% elif order.payment_method == 'cash' %}
-    <div class="row">
-      <span><strong>Delivery Address:</strong></span>
-      <span>{{ order.address }}</span>
-    </div>
-    <div class="row">
-      <span><strong>Contact No.:</strong></span>
-      <span>{{ order.contact }}</span>
-    </div>
-    {% endif %}
   </div>
+  {% endfor %}
 
   <div class="actions">
     <a href="{% url 'dashboard' %}" class="btn-primary">Continue Shopping</a>
-   <a href="{% url 'download_receipt' order.id %}" class="btn btn-primary mt-3">
-  <i class="bi bi-download"></i> Download Receipt
-</a>
-
+    <a href="{% url 'download_receipt' payment.id %}" class="btn-outline">
+      <i class="bi bi-download"></i> Download Receipt
+    </a>
   </div>
 </div>
 {% endblock body %}
-

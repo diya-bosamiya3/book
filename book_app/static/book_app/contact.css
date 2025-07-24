@@ -1,47 +1,47 @@
-/* Reset */
+
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Root Palette */
 :root {
-  --background: #f8f1e4;
-  --card-bg: #fffdf7;
-  --primary: #5c4033;
-  --accent: #a67c52;
-  --border: #e0d4bd;
-  --text: #3e2f23;
-  --highlight: #dac7aa;
-  --btn-hover: #7a583a;
-  --shadow: rgba(0, 0, 0, 0.08);
-  --radius: 10px;
+  --background: #ffe6f0;
+  --card-bg: rgba(255, 240, 250, 0.6);
+  --primary: #a64ca6;
+  --accent: #cc66cc;
+  --border: #f2b5e0;
+  --text: #4d004d;
+  --highlight: #ffe0f0;
+  --btn-hover: #b30086;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --radius: 12px;
+  --glass: blur(15px) saturate(120%);
 }
 
-/* Body */
 body {
-  font-family: 'Georgia', serif;
-  background-color: var(--background);
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right top, #ffd6e9, #f3c8f3);
   color: var(--text);
   line-height: 1.7;
+  backdrop-filter: var(--glass);
 }
 
-/* Main Layout */
 .main-content {
   max-width: 1140px;
   margin: 0 auto;
   padding: 2rem;
 }
 
-/* Card Style */
 .card, .form-section, .card-mg4 {
-  background-color: peachpuff
+  background-color: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 12px var(--shadow);
+  box-shadow: 0 8px 20px var(--shadow);
+  backdrop-filter: var(--glass);
 }
 
 .card h2, .card-mg4 h2 {
@@ -54,7 +54,6 @@ body {
   font-size: 1rem;
 }
 
-/* Grid System */
 .grid {
   display: grid;
   gap: 2rem;
@@ -64,8 +63,12 @@ body {
 .grid-3 {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
-
-/* Form Section */
+.grid.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 1rem;
+}
 .form-section {
   background-color: var(--highlight);
   border-left: 6px solid var(--accent);
@@ -108,7 +111,6 @@ textarea {
   min-height: 120px;
 }
 
-/* Button */
 button {
   background-color: var(--accent);
   color: white;
@@ -117,14 +119,14 @@ button {
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s;
 }
 
 button:hover {
   background-color: var(--btn-hover);
+  transform: scale(1.05);
 }
 
-/* FAQ Section */
 .card-mg4 h3 {
   font-size: 1.2rem;
   color: var(--primary);
@@ -132,11 +134,10 @@ button:hover {
 }
 
 .card-mg4 p {
-  color: #4d3c2a;
+  color: #5e005e;
   font-size: 0.95rem;
 }
 
-/* Utility */
 .text-center {
   text-align: center;
 }
@@ -145,9 +146,9 @@ button:hover {
   color: var(--accent);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .main-content {
     padding: 1rem;
   }
 }
+

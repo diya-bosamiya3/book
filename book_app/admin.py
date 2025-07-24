@@ -1,13 +1,15 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from .models import Nuser, LoginActivity, Book, Contact, Payment, Cart, CartItem, Order
+from .models import (
+    Nuser, LoginActivity, Book, Contact, Payment, 
+    Cart, CartItem, OrderedBook  # Include OrderedBook
+)
 
-# Unregister default User admin if already registered
+# Unregister and re-register the built-in User with custom admin
 if admin.site.is_registered(User):
     admin.site.unregister(User)
 
-# Custom User Admin
 class CustomUserAdmin(UserAdmin):
     list_display = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined')
     ordering = ('-date_joined',)
@@ -36,52 +38,33 @@ class ContactAdmin(admin.ModelAdmin):
     ordering = ('-date',)
     search_fields = ('name', 'email')
 
+class OrderedBookInline(admin.TabularInline):
+    model = OrderedBook
+    extra = 0
+
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'get_user', 'get_book', 'get_payment_method',
-        'get_card_num', 'get_upi_id', 'get_address', 'get_contact'
+        'id', 'user', 'name', 'payment_method',
+        'card_num', 'upi_id', 'address', 'contact'
     )
     ordering = ('-id',)
+    search_fields = ('user__username', 'name')
+    inlines = [OrderedBookInline]
 
-    def get_user(self, obj):
-        return obj.order.user.username
-    get_user.short_description = 'User'
-
-    def get_book(self, obj):
-        return obj.book.book_title
-    get_book.short_description = 'Book'
-
-    def get_payment_method(self, obj):
-        return obj.order.payment_method
-    get_payment_method.short_description = 'Method'
-
-    def get_card_num(self, obj):
-        return obj.order.card_num
-    get_card_num.short_description = 'Card Number'
-
-    def get_upi_id(self, obj):
-        return obj.order.upi_id
-    get_upi_id.short_description = 'UPI ID'
-
-    def get_address(self, obj):
-        return obj.order.address
-    get_address.short_description = 'Address'
-
-    def get_contact(self, obj):
-        return obj.order.contact
-    get_contact.short_description = 'Contact'
-
+@admin.register(OrderedBook)
+class OrderedBookAdmin(admin.ModelAdmin):
+    list_display = ('id', 'payment', 'book')
+    search_fields = ('book__book_title',)
+    
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user')
+    list_display = ('id', 'user', 'book_count')
+
+    def book_count(self, obj):
+        return obj.items.count()
+    book_count.short_description = 'Books in Cart'
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'cart', 'book')
-
-# Optional: Register Order model for completeness
-@admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'total_amount', 'payment_method', 'created_at')
-    ordering = ('-created_at',)
