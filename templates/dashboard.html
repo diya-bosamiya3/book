@@ -8,87 +8,90 @@
 {% endblock %}
 
 {% block body %}
-<!-- Carousel Section -->
-<div class="carousel-container">
-  <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-indicators">
-      <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"></button>
-      <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"></button>
-      <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"></button>
-    </div>
-    <div class="carousel-inner">
-      <div class="carousel-item active">
-        <img src="{% static 'book_app/img2.jpeg' %}" class="d-block w-100 carousel-img" alt="Rare Books">
+<!-- Main Content Wrapper -->
+<div class="content-wrapper">
+  <!-- Carousel Section -->
+  <div class="carousel-container">
+    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"></button>
       </div>
-      <div class="carousel-item">
-        <img src="{% static 'book_app/img3.jpg' %}" class="d-block w-100 carousel-img" alt="Sell Books">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="{% static 'book_app/img2.jpeg' %}" class="d-block w-100 carousel-img" alt="Rare Books">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'book_app/img3.jpg' %}" class="d-block w-100 carousel-img" alt="Sell Books">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'book_app/img5.jpeg' %}" class="d-block w-100 carousel-img" alt="Appraisals">
+        </div>
       </div>
-      <div class="carousel-item">
-        <img src="{% static 'book_app/img5.jpeg' %}" class="d-block w-100 carousel-img" alt="Appraisals">
-      </div>
-    </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon"></span>
-      <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
-      <span class="carousel-control-next-icon"></span>
-      <span class="visually-hidden">Next</span>
-    </button>
-  </div>
-</div>
-
-<!-- Hero Section -->
-<div class="hero-section">
-  <div class="hero-text">
-    <h1>📚 Welcome to Book Bazaar</h1>
-    <p>Your one-stop shop for buying & selling vintage and rare books.</p>
-    <div class="hero-buttons">
-      <button onclick="location.href='{% url 'selling' %}'" class="btn sell">Sell a Book</button>
-      <button onclick="location.href='{% url 'book' %}'" class="btn browse">Browse Books</button>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
     </div>
   </div>
-</div>
 
-<!-- Main Features -->
-<div class="main-content">
-  <section class="features">
-    <h2>Why Choose Book Bazaar?</h2>
-    <div class="cards">
-      <div class="card animated">
-        📘 <strong>Buy Rare Books</strong>
-        <p>Signed copies, vintage gems, and collector’s items await you.</p>
-        <a href="{% url 'book' %}">Browse Books</a>
-      </div>
-      <div class="card animated delay-1">
-        💰 <strong>Sell Your Books</strong>
-        <p>List your used books easily and get fair returns.</p>
-        <a href="{% url 'selling' %}">Sell Now</a>
-      </div>
-      <div class="card animated delay-2">
-        ⭐ <strong>Expert Appraisal</strong>
-        <p>Get authentic valuations from our team of book experts.</p>
-        <a href="#">Get Appraisal</a>
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-text">
+      <h1>📚 Welcome to Book Bazaar</h1>
+      <p>Your one-stop shop for buying & selling vintage and rare books.</p>
+      <div class="hero-buttons">
+        <button onclick="location.href='{% url 'selling' %}'" class="btn sell">Sell a Book</button>
+        <button onclick="location.href='{% url 'book' %}'" class="btn browse">Browse Books</button>
       </div>
     </div>
-  </section>
+  </div>
 
-  <section class="features">
-    <h2>Why Vintage Books?</h2>
-    <div class="cards">
-      <div class="card animated">
-        🔍 <strong>Authenticated</strong>
-        <p>Each book is verified for quality and authenticity.</p>
+  <!-- Main Features -->
+  <div class="main-content">
+    <section class="features">
+      <h2>Why Choose Book Bazaar?</h2>
+      <div class="cards">
+        <div class="card animated">
+          📘 <strong>Buy Rare Books</strong>
+          <p>Signed copies, vintage gems, and collector’s items await you.</p>
+          <a href="{% url 'book' %}">Browse Books</a>
+        </div>
+        <div class="card animated delay-1">
+          💰 <strong>Sell Your Books</strong>
+          <p>List your used books easily and get fair returns.</p>
+          <a href="{% url 'selling' %}">Sell Now</a>
+        </div>
+        <div class="card animated delay-2">
+          ⭐ <strong>Expert Appraisal</strong>
+          <p>Get authentic valuations from our team of book experts.</p>
+          <a href="#">Get Appraisal</a>
+        </div>
       </div>
-      <div class="card animated delay-1">
-        🚚 <strong>Secure Shipping</strong>
-        <p>Insured delivery with premium packaging.</p>
+    </section>
+
+    <section class="features">
+      <h2>Why Vintage Books?</h2>
+      <div class="cards">
+        <div class="card animated">
+          🔍 <strong>Authenticated</strong>
+          <p>Each book is verified for quality and authenticity.</p>
+        </div>
+        <div class="card animated delay-1">
+          🚚 <strong>Secure Shipping</strong>
+          <p>Insured delivery with premium packaging.</p>
+        </div>
+        <div class="card animated delay-2">
+          📏 <strong>Money-Back Guarantee</strong>
+          <p>Return within 30 days if not satisfied.</p>
+        </div>
       </div>
-      <div class="card animated delay-2">
-        💯 <strong>Money-Back Guarantee</strong>
-        <p>Return within 30 days if not satisfied.</p>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </div>
 {% endblock %}

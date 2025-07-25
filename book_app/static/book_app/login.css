@@ -1,46 +1,55 @@
 body {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: #f9f9f9;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #fef6e4, #fcefc7);
+}
+
+#bookCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .container {
+  position: relative;
   display: flex;
-  min-height: 100vh;
-  align-items: center;
+  height: 100vh;
+  z-index: 2;
   justify-content: center;
-}
-
-.login-left {
-  background: #fef4e9;
-  padding: 40px;
+  align-items: center;
+  padding: 20px;
 }
 
 .login-left img {
-  max-width: 400px;
-  height: auto;
+  max-width: 300px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
 }
 
 .login-right {
   background: white;
   border-radius: 25px;
   padding: 50px 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   max-width: 400px;
+  width: 100%;
+  margin-left: 40px;
 }
 
-.login-right h2 {
+h2 {
   margin: 0;
-  font-weight: normal;
+  font-weight: 600;
   color: #333;
-  font-size: 24px;
 }
 
-.login-right h3 {
+h3 {
   margin-top: 5px;
-  font-weight: bold;
+  font-weight: 700;
   color: #5f3dc4;
-  font-size: 20px;
 }
 
 .input-group {
@@ -66,14 +75,14 @@ body {
 }
 
 .forgot {
-  margin-top: 10px;
   text-align: right;
+  margin-top: 10px;
 }
 
 .forgot a {
-  color: #999;
-  text-decoration: none;
+  color: #888;
   font-size: 14px;
+  text-decoration: none;
 }
 
 button {
@@ -97,6 +106,6 @@ button {
 
 .create-account a {
   color: #5f3dc4;
-  text-decoration: none;
   font-weight: bold;
+  text-decoration: none;
 }

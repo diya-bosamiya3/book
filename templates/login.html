@@ -2,45 +2,234 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login Page</title>
-  <link rel="stylesheet" href="{% static 'book_app/login.css' %}"></link>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #e0f7fa, #0288d1);
+    }
+
+    #bookCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .container {
+      position: relative;
+      display: flex;
+      height: 100vh;
+      z-index: 2;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-left img {
+      max-width: 300px;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-right {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 25px;
+      padding: 50px 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      margin-left: 40px;
+    }
+
+    h2 {
+      margin: 0;
+      font-weight: 600;
+      color: #01579b;
+    }
+
+    h3 {
+      margin-top: 5px;
+      font-weight: 700;
+      color: #0288d1;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      margin-top: 25px;
+      background: #e1f5fe;
+      border-radius: 30px;
+      padding: 12px 18px;
+    }
+
+    .input-group .icon {
+      font-size: 20px;
+      margin-right: 10px;
+      color: #0288d1;
+    }
+
+    .input-group input {
+      border: none;
+      outline: none;
+      background: transparent;
+      flex: 1;
+      font-size: 16px;
+    }
+
+    .forgot {
+      text-align: right;
+      margin-top: 10px;
+    }
+
+    .forgot a {
+      color: #006064;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 30px;
+      background: linear-gradient(to right, #0288d1, #26c6da);
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .create-account {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .create-account a {
+      color: #0288d1;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .alert {
+      background: #ffebee;
+      color: #c62828;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
+  <canvas id="bookCanvas"></canvas>
+
   <div class="container">
     <div class="login-left">
-      <img src="{% static 'book_app\img1.jpg' %}" alt="Login Illustration">
+      <img src="{% static 'book_app/img1.jpg' %}" alt="Reading Illustration" />
     </div>
     <div class="login-right">
       <h2>WELCOME BACK</h2>
       <h3>LOGIN PAGE</h3>
       <form onsubmit="return validateForm()" method="post" action="">
-  {% csrf_token %}
+        {% csrf_token %}
+        <div class="input-group">
+          <span class="icon">👤</span>
+          <input type="text" id="username" name="username" placeholder="Enter username" required />
+        </div>
 
-  <div class="input-group">
-    <span class="icon">👤</span>
-    <input type="text" id="username" name="username" placeholder="Enter username" required>
-  </div>
-  {% if messages %}
-  {% for message in messages %}
-    <div class="alert">{{ message }}</div>
-  {% endfor %}
-{% endif %}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
 
-  <div class="input-group">
-    <span class="icon">🔒</span>
-    <input type="password" id="password" name="password" placeholder="••••••••" required>
-  </div>
-  <div class="forgot">
-    <a href="#">Forgot password?</a>
-  </div>
-  <button type="submit">SIGN IN</button>
-  <p class="create-account">DON'T HAVE AN ACCOUNT? <a href="{% url 'newacc' %}">CREATE AN ACCOUNT</a></p>
-</form>
+        <div class="input-group">
+          <span class="icon">🔒</span>
+          <input type="password" id="password" name="password" placeholder="••••••••" required />
+        </div>
 
+        <div class="forgot"><a href="#">Forgot password?</a></div>
+        <button type="submit">SIGN IN</button>
+        <p class="create-account">DON'T HAVE AN ACCOUNT? <a href="{% url 'newacc' %}">CREATE AN ACCOUNT</a></p>
+      </form>
     </div>
   </div>
-  <script src="{% static 'book_app/login.js' %}"></script>
+
+  <!-- Floating Cyan Book Particles -->
+  <script>
+    const canvas = document.getElementById("bookCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    let particles = [];
+
+    class BookParticle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height - canvas.height;
+        this.size = 20 + Math.random() * 15;
+        this.speed = 0.4 + Math.random() * 0.8;
+        this.opacity = 0.3 + Math.random() * 0.4;
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = 0.2 + Math.random() * 0.3;
+      }
+
+      update() {
+        this.y += this.speed;
+        this.rotation += this.rotationSpeed;
+        if (this.y > canvas.height + this.size) {
+          this.reset();
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = "rgba(0, 188, 212, 0.7)";
+        ctx.shadowColor = "#00e5ff";
+        ctx.shadowBlur = 10;
+        ctx.fillRect(-this.size / 2, -this.size / 4, this.size, this.size / 2);
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < 70; i++) {
+      particles.push(new BookParticle());
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
 </body>
 </html>
