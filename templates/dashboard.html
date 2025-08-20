@@ -1,45 +1,85 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static custom_tags %}
 
 {% block title %}Book Bazaar - Dashboard{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'book_app/style.css' %}">
+<style>
+.review-section {
+  margin-top: 30px;
+}
+
+.review-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.review-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 250px;
+  box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.review-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 5px 15px rgba(0,0,0,0.12);
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+  margin-bottom: 10px;
+}
+
+blockquote {
+  font-style: italic;
+  color: #555;
+  margin: 10px 0;
+}
+
+.stars {
+  margin: 8px 0;
+}
+.star {
+  font-size: 1.2rem;
+}
+.star.filled {
+  color: gold;
+}
+.star.empty {
+  color: lightgray;
+}
+
+.review-date {
+  font-size: 0.85rem;
+  color: gray;
+  margin-top: 5px;
+}
+
+.no-reviews {
+  color: gray;
+}
+.no-reviews a {
+  color: #007bff;
+  text-decoration: none;
+}
+.no-reviews a:hover {
+  text-decoration: underline;
+}
+</style>
 {% endblock %}
 
 {% block body %}
-<!-- Main Content Wrapper -->
 <div class="content-wrapper">
-  <!-- Carousel Section -->
-  <div class="carousel-container">
-    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-indicators">
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"></button>
-      </div>
-      <div class="carousel-inner">
-        <div class="carousel-item active">
-          <img src="{% static 'book_app/img2.jpeg' %}" class="d-block w-100 carousel-img" alt="Rare Books">
-        </div>
-        <div class="carousel-item">
-          <img src="{% static 'book_app/img3.jpg' %}" class="d-block w-100 carousel-img" alt="Sell Books">
-        </div>
-        <div class="carousel-item">
-          <img src="{% static 'book_app/img5.jpeg' %}" class="d-block w-100 carousel-img" alt="Appraisals">
-        </div>
-      </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-    </div>
-  </div>
-
   <!-- Hero Section -->
   <div class="hero-section">
     <div class="hero-text">
@@ -94,4 +134,33 @@
     </section>
   </div>
 </div>
+
+<!-- Reviews Section -->
+<section class="features review-section">
+  <h2>🌟 What Our Users Say</h2>
+
+  {% if reviews %}
+    <div class="review-grid">
+      {% for review in reviews %}
+        <div class="review-card">
+          <img src="{% static 'book_app/userpfp.jpg' %}" alt="User Avatar" class="avatar">
+          <h5>{{ review.user.username }}</h5>
+          <p class="text-muted">Book Bazaar Reviewer</p>
+          <blockquote>“{{ review.comment }}”</blockquote>
+          <div class="stars">
+            {% for i in review.rating|times %}
+              <span class="star filled">★</span>
+            {% endfor %}
+            {% for i in 5|subtract:review.rating|times %}
+              <span class="star empty">★</span>
+            {% endfor %}
+          </div>
+          <div class="review-date">{{ review.created_at|date:"d M Y" }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="no-reviews">No reviews yet. <a href="#">Be the first to review!</a></p>
+  {% endif %}
+</section>
 {% endblock %}

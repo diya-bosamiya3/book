@@ -114,6 +114,7 @@
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-custom">
   <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'profile' %}">👤 Profile</a>
     <a class="navbar-brand" href="{% url 'dashboard' %}">📚 Book Bazaar</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
@@ -124,6 +125,7 @@
         <li class="nav-item"><a class="nav-link" href="{% url 'book' %}">Books</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'selling' %}">Sell</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'view_cart' %}">Cart</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'submit_review' %}">Reviews</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
       </ul>

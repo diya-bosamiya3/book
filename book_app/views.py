@@ -8,15 +8,53 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.template.loader import get_template
 from django.views.decorators.http import require_POST
-
+from django.shortcuts import render, redirect
+from django.core.mail import send_mail
 from datetime import datetime
 from xhtml2pdf import pisa
 import requests
 from openai import OpenAI
-
 from book_app.models import *
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+@login_required
+def profile_view(request):
+    user = request.user
+    
+    # ✅ Orders placed by user (use buyer since Order has buyer FK)
+    orders = Order.objects.filter(buyer=user).select_related("book")
+    
+    # ✅ Books sold by user (since your Book model uses `email` instead of seller FK)
+    selling_books = Book.objects.filter(email=user.email)
+    
+    # ✅ Wishlist items
+    wishlist = Wishlist.objects.filter(user=user).select_related("book")
+    
+    # ✅ Cart and items
+    cart = Cart.objects.filter(user=user).first()
+    cart_items = cart.items.select_related("book") if cart else []
+    
+    # ✅ Reviews written by user
+    reviews = Review.objects.filter(user=user)
+    
+    # ✅ Login history
+    login_history = LoginActivity.objects.filter(user=user).order_by("-login_time")
+    
+    # ✅ Payments (link is user → Payment, good)
+    payments = Payment.objects.filter(user=user)
+
+    return render(request, "profile.html", {
+        "user": user,
+        "orders": orders,
+        "selling_books": selling_books,
+        "wishlist": wishlist,
+        "cart_items": cart_items,
+        "reviews": reviews,
+        "login_history": login_history,
+        "payments": payments,
+    })
+
 
 
 @login_required
@@ -90,15 +128,37 @@ def newacc(request):
 
     return render(request, 'newacc.html')
 
-
 @login_required
 def dashboard(request):
     books = Book.objects.all()
-    cart_count = 0
-    cart, created = Cart.objects.get_or_create(user=request.user)
+    reviews = Review.objects.all().order_by('-created_at')[:5]
+
+    # Get or create cart and count items
+    cart, _ = Cart.objects.get_or_create(user=request.user)
     cart_count = cart.items.count()
 
-    return render(request, 'dashboard.html', {'books': books, 'cart_count': cart_count})
+    return render(request, 'dashboard.html', {
+        'books': books,
+        'cart_count': cart_count,
+        'reviews': reviews
+    })
+
+@login_required
+def submit_review(request):
+    if request.method == 'POST':
+        rating = int(request.POST['rating'])
+        comment = request.POST['comment']
+        Review.objects.create(user=request.user, rating=rating, comment=comment)
+        messages.success(request, 'Thanks for your review!')
+        return redirect('dashboard')  # This will show it on the dashboard
+
+    # If someone visits the page directly
+    return render(request, 'reviews.html', {
+        'reviews': Review.objects.order_by('-created_at')
+    })
+
+def review_page(request):
+    return render(request,'reviews.html')
 
 
 @login_required
@@ -178,14 +238,7 @@ def view_cart(request):
 
     return render(request, 'view_cart.html', {'cart': cart, 'items': items, 'total': total})
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Cart, CartItem, Payment, OrderedBook
-from django.core.mail import send_mail
-from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .models import Cart, CartItem, Payment, OrderedBook
+
 
 @login_required
 def checkout(request):

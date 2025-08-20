@@ -42,9 +42,11 @@ urlpatterns = [
     path('receipt/<int:payment_id>/', download_receipt, name='download_receipt'),
     path('checkout/success/', checkout_success, name='checkout_success'),
     path('ai-suggestions/', ai_book_suggestions, name='ai_suggestions'),
-    path('reviews/',submit_review, name='submit_review'),
+    path('submit_review/',submit_review, name='submit_review'),
+    path('reviews/',review_page, name='reviews'),
     path('wishlist/',wishlist_view, name='wishlist_view'),
     path('wishlist/add/<int:book_id>/', add_to_wishlist, name='add_to_wishlist'),
+    path('profile/', profile_view, name='profile'),
 
     path('wishlist/remove/<int:book_id>/', remove_from_wishlist, name='remove_from_wishlist'),
 

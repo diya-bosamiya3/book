@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Profile Card */
+    .profile-card {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .profile-card img {
+        border: 3px solid #fff;
+        border-radius: 50%;
+        margin-right: 20px;
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+    }
+    .profile-card h3 {
+        margin: 0;
+        font-weight: bold;
+    }
+    .profile-card p {
+        margin: 2px 0;
+    }
+
+    /* Quick Action Boxes */
+    .action-box {
+        border-radius: 15px;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        background: #f8f9fa;
+    }
+    .action-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    .action-box i {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    /* Section Cards */
+    .section-card {
+        border-radius: 15px;
+        padding: 20px;
+        background: #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .section-card h5 {
+        border-left: 4px solid #2575fc;
+        padding-left: 10px;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+
+    /* List Styling */
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #eee;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+
+    <!-- Profile Card -->
+    <div class="profile-card mb-5">
+        <img src="{% static 'images/default-avatar.png' %}" alt="Profile">
+        <div>
+            <h3>{{ user.username }}</h3>
+            <p class="mb-1">{{ user.email }}</p>
+            <small>Member since: {{ user.date_joined|date:"M d, Y" }}</small>
+        </div>
+    </div>
+
+    <!-- Quick Action Boxes -->
+    <div class="row text-center mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="card action-box p-4">
+                <i class="bi bi-heart-fill text-danger"></i>
+                <h5>Wishlist</h5>
+                <p class="text-muted">{{ wishlist.count|default:"0" }} items</p>
+                <a href="{% url 'wishlist_view' %}" class="btn btn-outline-danger btn-sm">View</a>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card action-box p-4">
+                <i class="bi bi-cart-fill text-primary"></i>
+                <h5>Cart</h5>
+                <p class="text-muted">{{ cart_items|length|default:"0" }} items</p>
+                <a href="{% url 'view_cart' %}" class="btn btn-outline-primary btn-sm">View</a>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card action-box p-4">
+                <i class="bi bi-bag-check-fill text-success"></i>
+                <h5>Orders</h5>
+                <p class="text-muted">{{ orders.count|default:"0" }} placed</p>
+                <!-- You don't have 'orders' URL, so either create it or remove this -->
+                <a href="#" class="btn btn-outline-success btn-sm disabled">Coming Soon</a>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card action-box p-4">
+                <i class="bi bi-book-half text-warning"></i>
+                <h5>Selling</h5>
+                <p class="text-muted">{{ selling_books.count|default:"0" }} listed</p>
+                <a href="{% url 'selling' %}" class="btn btn-outline-warning btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sections -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="section-card">
+                <h5>Recent Orders</h5>
+                {% if orders %}
+                    <ul class="list-group">
+                        {% for order in orders|slice:":5" %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                Order #{{ order.id }}
+                                <span class="badge bg-success">Placed</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No orders yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="section-card">
+                <h5>Your Selling Books</h5>
+                {% if selling_books %}
+                    <ul class="list-group">
+                        {% for book in selling_books|slice:":5" %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                {{ book.book_title }}
+                                <span class="badge bg-warning text-dark">₹{{ book.price }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No books listed for sale.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="section-card">
+                <h5>Cart Items</h5>
+                {% if cart_items %}
+                    <ul class="list-group">
+                        {% for item in cart_items|slice:":5" %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                {{ item.book.book_title }}
+                                <span class="badge bg-primary">₹{{ item.book.price }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Your cart is empty.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="section-card">
+                <h5>Your Reviews</h5>
+                {% if reviews %}
+                    <ul class="list-group">
+                        {% for review in reviews|slice:":5" %}
+                            <li class="list-group-item">
+                                <strong>{{ review.book.book_title }}</strong><br>
+                                <small class="text-muted">Rating: {{ review.rating }}/5</small><br>
+                                {{ review.comment }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No reviews submitted.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
