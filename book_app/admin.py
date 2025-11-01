@@ -30,7 +30,7 @@ class LoginActivityAdmin(admin.ModelAdmin):
 class BookAdmin(admin.ModelAdmin):
     list_display = ('id', 'book_title', 'author', 'price', 'condition', 'email', 'phone')
     search_fields = ('book_title', 'author')
-    ordering = ('book_title',)
+    ordering = ('-id',)
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):

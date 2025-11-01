@@ -137,3 +137,10 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.rating} Stars"
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile = models.ImageField(upload_to='profile_picture/', default='profile_picture/default-avatar.png')
+
+    def __str__(self):
+        return self.user.username

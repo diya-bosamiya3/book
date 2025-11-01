@@ -46,8 +46,8 @@ urlpatterns = [
     path('reviews/',review_page, name='reviews'),
     path('wishlist/',wishlist_view, name='wishlist_view'),
     path('wishlist/add/<int:book_id>/', add_to_wishlist, name='add_to_wishlist'),
-    path('profile/', profile_view, name='profile'),
-
+    path("profile/", profile_view, name="profile"),
+    path("search-suggest/", search_suggest, name="search_suggest"),
     path('wishlist/remove/<int:book_id>/', remove_from_wishlist, name='remove_from_wishlist'),
 
 

@@ -9,147 +9,92 @@
     <link rel="stylesheet" href="{% static 'book_app/style.css' %}">
     {% block extra_css %}{% endblock %}
 
- <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
-        color: #003c4d;
-    }
-    .navbar-custom {
-        background: linear-gradient(to right, #00bcd4, #0097a7);
-        padding: 1rem 2rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .navbar-custom .nav-link,
-    .navbar-custom .navbar-brand {
-        color: #ffffff;
-    }
-    .navbar-custom .nav-link:hover {
-        color: #b2ebf2;
-    }
-    .btn {
-        border-radius: 20px;
-        font-weight: 600;
-        padding: 0.5rem 1.2rem;
-        background: linear-gradient(to right, #00bcd4, #80deea);
-        color: white;
-        border: none;
-        transition: 0.3s ease-in-out;
-    }
-    .btn:hover {
-        transform: scale(1.05);
-        background: linear-gradient(to right, #0097a7, #26c6da);
-    }
-    .card {
-        background: rgba(255, 255, 255, 0.35);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 8px 20px rgba(0, 188, 212, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin: 1rem 0;
-        transition: 0.3s;
-    }
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 28px rgba(0, 150, 136, 0.3);
-    }
-    .card-body {
-        text-align: center;
-        padding: 1.5rem;
-    }
-    .carousel-item img {
-        height: 400px;
-        object-fit: cover;
-        border-radius: 16px;
-        filter: brightness(0.95);
-    }
-    .footer {
-        background: linear-gradient(to right, #00bcd4, #0097a7);
-        color: white;
-        padding: 3rem 1rem 2rem;
-        margin-top: 4rem;
-    }
-    .footer h4 {
-        color: #ffffff;
-        margin-bottom: 1rem;
-    }
-    .footer ul {
-        list-style: none;
-        padding: 0;
-    }
-    .footer ul li a {
-        color: #e0f7fa;
-        text-decoration: none;
-        transition: 0.3s;
-    }
-    .footer ul li a:hover {
-        text-decoration: underline;
-        color: #ffffff;
-    }
-    .footer p {
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
-    }
-    .horizontal-boxes {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-    .horizontal-boxes .card {
-        flex: 1 1 calc(33.333% - 20px);
-        min-width: 260px;
-    }
+<style>
+.nav-profile-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 0 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: 0.2s;
+}
+.nav-profile-thumb:hover {
+    transform: scale(1.08);
+}
 </style>
 
 </head>
+
 <body>
 
-<!-- Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-custom">
+<!-- ✅ Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-custom shadow-sm bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'profile' %}">👤 Profile</a>
-    <a class="navbar-brand" href="{% url 'dashboard' %}">📚 Book Bazaar</a>
+
+    <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">📚 Book Bazaar</a>
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-      <ul class="navbar-nav">
+
+      <ul class="navbar-nav align-items-center">
+
         <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Home</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'book' %}">Books</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'selling' %}">Sell</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'view_cart' %}">Cart</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'submit_review' %}">Reviews</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
+
+        {% if request.user.is_authenticated %}
+        <!-- ✅ Profile Dropdown -->
+        <li class="nav-item dropdown ms-2">
+
+          <div class="d-flex align-items-center dropdown-toggle"  role="button" data-bs-toggle="dropdown">
+        <img src="{% if request.user.is_authenticated and request.user.profile.profile %}
+            {{ request.user.profile.profile.url }}
+          {% else %}
+            {% static 'images/default-avatar.png' %}
+          {% endif %}"
+     class="nav-profile-thumb">
+
+            <span class="ms-2">{{ request.user.username }}</span>
+          </div>
+
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+          </ul>
+        </li>
+
+        {% else %}
+        <li class="nav-item">
+            <a class="btn btn-outline-primary ms-3" href="{% url 'login' %}">Login</a>
+        </li>
+        {% endif %}
+        
+
       </ul>
     </div>
   </div>
 </nav>
 
-<!-- Page Content -->
+<!-- ✅ Page Container -->
 <main class="container my-4">
-    {% block body %}
-    <!-- Page-specific content goes here -->
-    {% endblock %}
+    {% block body %}{% endblock %}
 </main>
 
-<!-- Footer -->
-<footer class="footer text-center">
+<!-- ✅ Footer -->
+<footer class="footer text-center py-3 bg-light border-top">
     <div class="container">
-        <h4>Book Bazaar</h4>
-        <ul class="list-inline">
-            <li class="list-inline-item"><a href="{% url 'contact' %}">Contact</a></li>
-            <li class="list-inline-item"><a href="{% url 'book' %}">Browse Books</a></li>
-            <li class="list-inline-item"><a href="{% url 'selling' %}">Sell a Book</a></li>
-        </ul>
-        <p>&copy; 2025 Book Bazaar. All rights reserved.</p>
+        <h5>Book Bazaar</h5>
+        <p class="mb-1">© 2025 Book Bazaar. All rights reserved.</p>
     </div>
 </footer>
 

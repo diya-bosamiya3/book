@@ -15,13 +15,19 @@ from xhtml2pdf import pisa
 import requests
 from openai import OpenAI
 from book_app.models import *
+from django.db.models import Q
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 @login_required
 def profile_view(request):
     user = request.user
+    profile,created=Profile.objects.get_or_create(user=user)
     
+    if request.method == "POST" and request.FILES.get("profile"):
+        profile.profile = request.FILES["profile"]
+        profile.save()
+        return redirect("profile")
     # ✅ Orders placed by user (use buyer since Order has buyer FK)
     orders = Order.objects.filter(buyer=user).select_related("book")
     
@@ -46,6 +52,7 @@ def profile_view(request):
 
     return render(request, "profile.html", {
         "user": user,
+        "profile": profile,
         "orders": orders,
         "selling_books": selling_books,
         "wishlist": wishlist,
@@ -164,7 +171,8 @@ def review_page(request):
 @login_required
 def base(request):
     userinfo = LoginActivity.objects.filter(user=request.user).order_by('-id').first()
-    return render(request, 'base.html', {'userinfo': userinfo})
+    profile,created=Profile.objects.get_or_create(user=request.user)
+    return render(request, 'base.html', {'userinfo': userinfo, 'profile':profile})
 
 
 def services(request):
@@ -194,13 +202,37 @@ def selling(request):
 def book_display(request):
     books = Book.objects.all().order_by('-id')
     search = request.GET.get('search')
+    
     if search:
-        books = books.filter(book_title__icontains=search)
+        books = books.filter(
+            Q(book_title__icontains=search) |
+            Q(author__icontains=search)
+        )
 
+    # Suggestions (max 5)
+    suggestions = Book.objects.filter(book_title__icontains=search)[:5] if search else []
+    
     cart, _ = Cart.objects.get_or_create(user=request.user)
     cart_count = cart.items.count()
 
-    return render(request, 'books.html', {'books': books, 'cart_count': cart_count})
+    return render(request, 'books.html', {
+        'books': books,
+        'cart_count': cart_count,
+        'suggestions': suggestions,  # ✅ fixed comma
+        'search': search,  # ✅ send entered search text back
+    })
+from django.http import JsonResponse
+
+@login_required
+def search_suggest(request):
+    term = request.GET.get("term", "")
+    results = []
+
+    if term:
+        books = Book.objects.filter(book_title__icontains=term).values_list('book_title', flat=True)[:5]
+        results = list(books)
+
+    return JsonResponse(results, safe=False)
 
 
 @login_required

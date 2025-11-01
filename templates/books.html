@@ -1,132 +1,171 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Book Bazaar - Buy & Sell Old Books{% endblock %}
+{% block title %}Book Haven — Discover Your Next Read{% endblock %}
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'book_app/dashboard.css' %}">
 <style>
-  svg {
-    transition: transform 0.2s ease, fill 0.2s ease;
-  }
-  .scale-125 {
-    transform: scale(1.25);
-  }
+/* Blur effect when modal open */
+.blur-bg {
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.preview-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.preview-content {
+  background: #fff;
+  padding: 25px;
+  width: 500px;
+  border-radius: 12px;
+  animation: zoomIn .3s ease;
+  text-align: center;
+  position: relative;
+}
+.close-preview {
+  font-size: 28px;
+  position: absolute;
+  right: 15px;
+  top: 5px;
+  cursor: pointer;
+}
+@keyframes zoomIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 </style>
 {% endblock %}
 
 {% block body %}
 
-<div class="container mb-5">
-  <form method="get" class="search-form">
-    <div class="row align-items-center">
-      <div class="col-md-9 col-sm-8">
-        <input type="text" name="search" class="form-control" placeholder="Search books by title..." />
-      </div>
-      <div class="col-md-3 col-sm-4 mt-2 mt-sm-0">
-        <button type="submit" class="btn btn-success w-100">Search</button>
-      </div>
-    </div>
-  </form>
+<section class="hero-section text-center text-white d-flex align-items-center justify-content-center">
+  <div class="overlay"></div>
+  <div class="container position-relative">
+    <h1 class="display-4 fw-bold mb-3">Welcome to <span class="text-warning">Book Haven</span></h1>
+    <p class="lead mb-4">Buy • Sell • Explore — A paradise for book lovers 📚</p>
 
-  <div class="row g-4 mt-3">
+<form method="get" id="searchForm" class="search-box d-flex justify-content-center position-relative" style="width:60%;margin:auto;">
+    <input type="text" id="searchInput" name="search" class="form-control search-input"
+        placeholder="🔍 Search by title or author..." value="{{ search|default:'' }}"
+        onkeyup="fetchSuggestions(this.value)" autocomplete="off">
+
+    <button class="btn btn-warning search-btn ms-2"><i class="bi bi-search"></i></button>
+
+    <div id="suggestion-box"
+        class="bg-white border shadow position-absolute rounded mt-5 w-100"
+        style="display:none;max-height:200px;overflow-y:auto;z-index:1000;"></div>
+</form>
+
+  </div>
+</section>
+
+<!-- WRAP BOOKS IN A BLUR DIV -->
+<div id="bookArea">
+
+<div class="container py-5">
+  <div class="row g-4">
     {% for book in books %}
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex align-items-stretch">
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <div class="book-card shadow-lg">
 
-      <div class="card book-card h-100">
-        <img src="{% if book.book_photo %}
-                      {{ book.book_photo.url }}
-                  {% else %}
-                      {% static 'book_app/default_book.png' %}
-                  {% endif %}" 
-             class="card-img-top" alt="{{ book.book_title }}" style="height:320px; object-fit:cover;">
-        <div class="card-body">
-          <h5 class="card-title">{{ book.book_title }}</h5>
-          <p><i class="bi bi-person-fill"></i> {{ book.author }}</p>
-          <p><i class="bi bi-currency-rupee"></i> {{ book.price }}</p>
+        <img 
+          src="{% if book.book_photo %}{{ book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" 
+          class="book-img"
+          style="cursor:pointer;width:100%;height:240px;object-fit:cover;"
+          onclick="previewBook(
+            '{{ book.book_photo.url|default_if_none:"" }}',
+            `{{ book.book_title|escapejs }}`,
+            `{{ book.author|escapejs }}`,
+            `{{ book.price }}`,
+            `{{ book.description|default:"No description available"|escapejs }}`
+          )"
+        />
+
+        <div class="p-3">
+          <h5 class="fw-bold">{{ book.book_title|truncatechars:30 }}</h5>
+          <p class="text-muted small mb-1"><i class="bi bi-person"></i> {{ book.author }}</p>
+          <p class="price fw-semibold"><i class="bi bi-currency-rupee"></i>{{ book.price }}</p>
+
           {% if book.description %}
-          <p class="text-muted">{{ book.description|truncatechars:60 }}</p>
+          <p class="desc small text-secondary">{{ book.description|truncatechars:50 }}</p>
           {% endif %}
 
-          <!-- Wishlist Heart -->
-          <form method="POST" class="wishlist-form d-inline" data-book-id="{{ book.id }}">
-            {% csrf_token %}
-            <button type="button" class="wishlist-btn float-end" data-id="{{ book.id }}" style="background: transparent; border: none;">
-              <svg id="heart-{{ book.id }}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
-                   fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                   class="transition duration-300 ease-in-out text-gray-400 hover:text-red-500">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M4.318 6.318C5.67 4.966 7.69 4.966 9.042 6.318L12 9.276l2.958-2.958c1.352-1.352 3.372-1.352 4.724 0 1.352 1.352 1.352 3.372 0 4.724L12 21 4.318 13.042c-1.352-1.352-1.352-3.372 0-4.724z" />
-              </svg>
+          <div class="d-flex justify-content-between mt-3">
+            <button class="btn btn-outline-danger btn-sm wishlist-btn" data-id="{{ book.id }}">
+              <i class="bi bi-heart"></i>
             </button>
-          </form>
 
-          <!-- Add to Cart -->
-          <button class="btn btn-warning w-100 mt-2" onclick="addToCart({{ book.id }})">
-            <i class="bi bi-cart-plus"></i> Add to Cart
-          </button>
+            <button class="btn btn-warning btn-sm" onclick="addToCart({{ book.id }})">
+              <i class="bi bi-cart-plus"></i> Add to Cart
+            </button>
+          </div>
         </div>
       </div>
     </div>
+    {% empty %}
+    <h4 class="text-center text-muted">No books found 😕</h4>
     {% endfor %}
   </div>
 </div>
 
-<!-- Hidden form targeting invisible iframe -->
+</div> <!-- bookArea END -->
+
+<!-- Hidden Cart Form -->
 <iframe name="hiddenFrame" style="display:none;"></iframe>
 <form id="addToCartForm" method="POST" action="" target="hiddenFrame" style="display:none;">
   {% csrf_token %}
 </form>
 
-<!-- Scripts -->
-<script>
-  // Add to Cart logic
-  function addToCart(bookId) {
-    const form = document.getElementById('addToCartForm');
-    form.action = `/cart/add/${bookId}/`;
-    form.submit();
+<!-- PREVIEW MODAL -->
+<div id="bookPreview" class="preview-modal d-none">
+  <div class="preview-content">
+      <span class="close-preview">&times;</span>
+      <img id="previewImg" class="img-fluid mb-3" style="max-height:400px;border-radius:8px;">
+      <h4 id="previewTitle"></h4>
+      <p id="previewAuthor" class="text-muted"></p>
+      <p id="previewPrice" class="fw-bold"></p>
+      <p id="previewDesc" class="small"></p>
+  </div>
+</div>
 
-    // Update cart count manually
-    const badge = document.getElementById('cartCount');
-    if (badge) {
-      let count = parseInt(badge.textContent || "0");
-      badge.textContent = count + 1;
+<script>
+function previewBook(img, title, author, price, description){
+    document.getElementById("previewImg").src = img || "{% static 'book_app/default_book.png' %}";
+    document.getElementById("previewTitle").innerText = title;
+    document.getElementById("previewAuthor").innerText = "👤 " + author;
+    document.getElementById("previewPrice").innerText = "₹ " + price;
+    document.getElementById("previewDesc").innerText = description;
+
+    document.getElementById("bookPreview").classList.remove("d-none");
+    document.getElementById("bookArea").classList.add("blur-bg");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelector(".close-preview").onclick = function(){
+        document.getElementById("bookPreview").classList.add("d-none");
+        document.getElementById("bookArea").classList.remove("blur-bg");
     }
 
-    alert("Book added to cart!");
-  }
-
-  // Get CSRF token
-  function getCSRFToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]').value;
-  }
-
-  // Wishlist logic
-  document.querySelectorAll('.wishlist-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const bookId = this.getAttribute('data-id');
-      const heartIcon = document.getElementById(`heart-${bookId}`);
-
-      fetch(`/wishlist/add/${bookId}/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': getCSRFToken(),
+    document.getElementById("bookPreview").onclick = function(e){
+        if(e.target.id === "bookPreview"){
+            document.getElementById("bookPreview").classList.add("d-none");
+            document.getElementById("bookArea").classList.remove("blur-bg");
         }
-      })
-      .then(response => {
-        if (response.ok) {
-          heartIcon.classList.toggle('text-red-500');
-          heartIcon.classList.toggle('text-gray-400');
-          heartIcon.classList.add('scale-125');
-          setTimeout(() => heartIcon.classList.remove('scale-125'), 200);
-        } else {
-          alert("Failed to add to wishlist.");
-        }
-      });
-    });
-  });
+    }
+
+});
 </script>
 
 {% endblock %}
