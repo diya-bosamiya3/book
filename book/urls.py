@@ -41,7 +41,8 @@ urlpatterns = [
     path('payment/success/<int:payment_id>/',success, name='success'),
     path('receipt/<int:payment_id>/', download_receipt, name='download_receipt'),
     path('checkout/success/', checkout_success, name='checkout_success'),
-    path('ai-suggestions/', ai_book_suggestions, name='ai_suggestions'),
+    path("ai/recommend/", ai_book_recommend, name="ai_book_recommend"),
+
     path('submit_review/',submit_review, name='submit_review'),
     path('reviews/',review_page, name='reviews'),
     path('wishlist/',wishlist_view, name='wishlist_view'),

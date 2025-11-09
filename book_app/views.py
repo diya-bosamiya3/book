@@ -65,21 +65,44 @@ def profile_view(request):
 
 
 @login_required
-def ai_book_suggestions(request):
-    query = "anime"
-    response = requests.get(f"https://openlibrary.org/search.json?q={query}")
+def ai_book_recommend(request):
+    user_query = request.GET.get("query", "")
 
-    if response.status_code == 200:
-        data = response.json()
-        books = data.get('docs', [])[:5]
-        suggestions = [
-            f"{book.get('title')} by {', '.join(book.get('author_name', ['Unknown']))}"
-            for book in books
-        ]
-    else:
-        suggestions = ["Failed to fetch suggestions. Try again later."]
+    if not user_query:
+        return JsonResponse({"reply": "Please ask something like: Suggest books similar to Atomic Habits."})
 
-    return render(request, 'ai_suggestions.html', {'suggestions': suggestions})
+    # Fetch available books from your DB
+    books = Book.objects.all().values("book_title", "author", "description")
+    books_text = "\n".join([
+        f"{b['book_title']} by {b['author']} — {b.get('description','')}"
+        for b in books
+    ])[:5000]  # prevent too long prompt
+
+    prompt = f"""
+You are an intelligent AI Book Recommendation Assistant.
+User Query: {user_query}
+
+Available Books in Store:
+{books_text}
+
+Suggest 5 books that match the user's interest.
+Format response like this:
+
+📘 **Book Name**
+👨‍💻 Author
+✨ Why recommended
+
+If you find suitable suggestions from the user library, prioritize those.
+Otherwise suggest globally popular books.
+"""
+
+    result = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    reply = result.choices[0].message.content
+    return JsonResponse({"reply": reply})
 
 
 def login(request):

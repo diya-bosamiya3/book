@@ -91,6 +91,19 @@ blockquote {
       </div>
     </div>
   </div>
+  <div class="container mt-4">
+  <div class="card p-3 shadow">
+    <h5>🤖 Ask AI for Book Suggestions</h5>
+
+    <textarea id="aiQuery" class="form-control mt-2"
+      placeholder="e.g., recommend entrepreneurship books"></textarea>
+
+    <button class="btn btn-dark mt-2 w-100" onclick="askAI()">Ask AI</button>
+
+    <div id="aiResponse" class="mt-3 p-2 bg-light rounded"></div>
+  </div>
+</div>
+
 
   <!-- Main Features -->
   <div class="main-content">
@@ -163,4 +176,20 @@ blockquote {
     <p class="no-reviews">No reviews yet. <a href="#">Be the first to review!</a></p>
   {% endif %}
 </section>
+<script>
+function askAI() {
+    let query = document.getElementById("aiQuery").value;
+    if (!query) return alert("Enter your question");
+
+    document.getElementById("aiResponse").innerHTML = "⏳ Thinking...";
+
+    fetch(`/ai/recommend/?query=${encodeURIComponent(query)}`)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("aiResponse").innerHTML =
+            `<pre style='white-space: pre-wrap;'>${data.reply}</pre>`;
+    });
+}
+</script>
+
 {% endblock %}
