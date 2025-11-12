@@ -9,15 +9,21 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
-from pathlib import Path
 import os
-from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
+load_dotenv()  # this will read your .env file
+from pathlib import Path
 
-OPENAI_API_KEY = "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"
+from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+
+
 
 
 # Quick-start development settings - unsuitable for production

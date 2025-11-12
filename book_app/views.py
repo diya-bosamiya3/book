@@ -13,41 +13,95 @@ from django.core.mail import send_mail
 from datetime import datetime
 from xhtml2pdf import pisa
 import requests
-from openai import OpenAI
 from book_app.models import *
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from openai import OpenAI
 from django.db.models import Q
+from .models import Notification
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+#client = OpenAI(api_key=settings.OPENAI_API_KEY)
+import google.generativeai as genai
+import os
+
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+@csrf_exempt
+def ai_book_recommend(request):
+    if request.method == "POST":
+        user_message = request.POST.get("message", "").strip()
+
+        if not user_message:
+            return JsonResponse({
+                "reply": "Please type something like: Suggest books similar to 'Atomic Habits'."
+            })
+
+        # 1️⃣ Try to find matching books from your database
+        matching_books = Book.objects.filter(book_title__icontains=user_message)[:5]
+
+        if matching_books.exists():
+            book_list = "\n".join([
+                f"📘 {b.book_title} — ₹{b.price}" for b in matching_books
+            ])
+            bot_reply = f"I found these books related to your interest:\n\n{book_list}"
+
+        else:
+            # 2️⃣ Ask Gemini if no local match found (short replies)
+            model = genai.GenerativeModel("gemini-2.5-flash")
+
+            prompt = (
+                f"You are BookBot, a friendly book recommender.\n"
+                f"User asked: '{user_message}'\n"
+                f"Reply briefly in under 4 lines.\n"
+                f"Suggest only 3 books with title and author (no descriptions)."
+            )
+
+            response = model.generate_content(prompt)
+            bot_reply = response.text.strip()
+
+        return JsonResponse({"reply": bot_reply})
+
+    return JsonResponse({"error": "Invalid request method."}, status=400)
 
 @login_required
 def profile_view(request):
     user = request.user
-    profile,created=Profile.objects.get_or_create(user=user)
-    
+    profile, created = Profile.objects.get_or_create(user=user)
+
+    # ✅ Profile photo upload
     if request.method == "POST" and request.FILES.get("profile"):
         profile.profile = request.FILES["profile"]
         profile.save()
         return redirect("profile")
-    # ✅ Orders placed by user (use buyer since Order has buyer FK)
+
+    # ✅ Orders placed by this user
     orders = Order.objects.filter(buyer=user).select_related("book")
-    
-    # ✅ Books sold by user (since your Book model uses `email` instead of seller FK)
+
+    # ✅ Books uploaded/sold by this user (email used as seller identifier)
     selling_books = Book.objects.filter(email=user.email)
-    
-    # ✅ Wishlist items
+
+    # ✅ All orders for books uploaded by this user
+    sold_orders = (
+        Order.objects.filter(book__email=user.email)
+        .select_related("book", "buyer")
+        .order_by("-order_date")  # 👈 fixed here
+    )
+
+    # ✅ Wishlist
     wishlist = Wishlist.objects.filter(user=user).select_related("book")
-    
-    # ✅ Cart and items
+
+    # ✅ Cart
     cart = Cart.objects.filter(user=user).first()
     cart_items = cart.items.select_related("book") if cart else []
-    
-    # ✅ Reviews written by user
+
+    # ✅ Reviews
     reviews = Review.objects.filter(user=user)
-    
-    # ✅ Login history
+
+    # ✅ Login History
     login_history = LoginActivity.objects.filter(user=user).order_by("-login_time")
-    
-    # ✅ Payments (link is user → Payment, good)
+
+    # ✅ Payments
     payments = Payment.objects.filter(user=user)
 
     return render(request, "profile.html", {
@@ -60,50 +114,47 @@ def profile_view(request):
         "reviews": reviews,
         "login_history": login_history,
         "payments": payments,
+        "sold_orders": sold_orders,  # ✅ now fixed and works perfectly
     })
 
 
-
-@login_required
+"""""
+@csrf_exempt
 def ai_book_recommend(request):
-    user_query = request.GET.get("query", "")
+    if request.method == "POST":
+        user_message = request.POST.get("message", "").strip()
 
-    if not user_query:
-        return JsonResponse({"reply": "Please ask something like: Suggest books similar to Atomic Habits."})
+        if not user_message:
+            return JsonResponse({"reply": "Please type something like: Suggest books similar to 'Atomic Habits'."})
 
-    # Fetch available books from your DB
-    books = Book.objects.all().values("book_title", "author", "description")
-    books_text = "\n".join([
-        f"{b['book_title']} by {b['author']} — {b.get('description','')}"
-        for b in books
-    ])[:5000]  # prevent too long prompt
+        # 1️⃣ Try finding books in your own database
+        matching_books = Book.objects.filter(book_title__icontains=user_message)[:5]
+        if matching_books.exists():
+            book_list = "\n".join([f"📘 {b.book_title} — ₹{b.price}" for b in matching_books])
+            bot_reply = f"I found these books from our collection:\n\n{book_list}"
+        else:
+            # 2️⃣ Use GPT to recommend globally
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4.1-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a friendly and knowledgeable book recommender. Suggest 5 books with title, author, and short reason."
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Suggest 5 books similar to: {user_message}."
+                        }
+                    ]
+                )
+                bot_reply = response.choices[0].message.content
+            except Exception as e:
+                bot_reply = f"⚠️ Error: {e}"
 
-    prompt = f"""
-You are an intelligent AI Book Recommendation Assistant.
-User Query: {user_query}
+        return JsonResponse({"reply": bot_reply})
 
-Available Books in Store:
-{books_text}
-
-Suggest 5 books that match the user's interest.
-Format response like this:
-
-📘 **Book Name**
-👨‍💻 Author
-✨ Why recommended
-
-If you find suitable suggestions from the user library, prioritize those.
-Otherwise suggest globally popular books.
-"""
-
-    result = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    reply = result.choices[0].message.content
-    return JsonResponse({"reply": reply})
-
+    return JsonResponse({"error": "Invalid request method."}, status=400)"""""
 
 def login(request):
     if request.method == "POST":
@@ -287,12 +338,10 @@ def add_to_cart(request, book_id):
 
 @login_required
 def view_cart(request):
-    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart, _ = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('book')
     total = sum(item.book.price for item in items)
-
-    return render(request, 'view_cart.html', {'cart': cart, 'items': items, 'total': total})
-
+    return render(request, "cart.html", {"items": items, "total": total})
 
 
 @login_required
@@ -302,7 +351,7 @@ def checkout(request):
     total = sum(item.book.price for item in items)
 
     if request.method == "POST":
-        name = request.user.username  # Auto-filled name from logged-in user
+        name = request.user.username
         payment_method = request.POST.get('payment_method')
         card_num = request.POST.get('card_num')
         upi_id = request.POST.get('upi_id')
@@ -316,7 +365,7 @@ def checkout(request):
                 "error": "Name is required.",
             })
 
-        # Create Payment record
+        # ✅ Create Payment record
         payment = Payment.objects.create(
             user=request.user,
             name=name,
@@ -327,31 +376,45 @@ def checkout(request):
             contact=contact
         )
 
-        # Create OrderedBook entries
+        # ✅ Create OrderedBook entries + Notify seller
         for item in items:
-            OrderedBook.objects.create(
-                payment=payment,
-                book=item.book
-            )
-            item.book.is_sold = True  # Optional: track sold books
+            OrderedBook.objects.create(payment=payment, book=item.book)
+
+            # Mark book as sold
             item.book.save()
 
-        # Clear the cart
+            # 🔔 Notify the seller
+            Notification.objects.create(
+                user=item.book.seller,
+                message=f"{request.user.username} has ordered your book '{item.book.book_title}'."
+            )
+
+        # ✅ Clear the cart
         items.delete()
 
-        return redirect("success", payment_id=payment.id)
+        # 🔔 Notify buyer
+        Notification.objects.create(
+            user=request.user,
+            message=f"Your payment (ID: {payment.id}) was successful! Your ordered books are on the way."
+        )
 
-    return render(request, "checkout.html", {
-        "items": items,
-        "total": total
-    })
+        return redirect("success", payment_id=payment.id)
+        
+
+    return render(request, "checkout.html", {"items": items, "total": total})
+
+@login_required
+def my_notifications(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'my_notifications.html', {'notifications': notifications})
 
 @login_required
 def remove_from_cart(request, item_id):
-    item = get_object_or_404(CartItem, id=item_id)
-    if item.cart.user == request.user:
+    if request.method == "POST":
+        item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
         item.delete()
-    return redirect('view_cart')
+        return redirect("view_cart")
+    return HttpResponse(status=405)
 
 
 @login_required
@@ -450,3 +513,14 @@ def remove_from_wishlist(request, book_id):
 def wishlist_view(request):
     wishlist_items = Wishlist.objects.filter(user=request.user).select_related('book')
     return render(request, 'wishlist.html', {'wishlist_items': wishlist_items})
+
+@login_required
+def toggle_wishlist(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, book=book)
+    
+    if not created:
+        wishlist_item.delete()
+        return JsonResponse({'status': 'removed'})
+    return JsonResponse({'status': 'added'})
+

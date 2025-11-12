@@ -5,7 +5,6 @@
 
 {% block extra_css %}
 <style>
-/* Profile Card */
 .profile-card {
     background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
     color: white;
@@ -29,8 +28,6 @@
     transform: scale(1.05);
     border-color: #ffeb3b;
 }
-
-/* ✅ Full Image Modal */
 #imgModal {
     display: none;
     position: fixed;
@@ -44,11 +41,6 @@
     max-width: 90%;
     max-height: 90%;
     border-radius: 12px;
-    animation: zoomIn .2s ease-out;
-}
-@keyframes zoomIn {
-    from {transform: scale(.8); opacity:0;}
-    to {transform: scale(1); opacity:1;}
 }
 .close-btn {
     position: absolute;
@@ -58,8 +50,6 @@
     color: white;
     cursor: pointer;
 }
-
-/* Quick Cards */
 .action-box {
     border-radius: 15px;
     padding: 20px;
@@ -70,8 +60,6 @@
     transform: translateY(-4px);
     box-shadow: 0 6px 20px rgba(0,0,0,.15);
 }
-
-/* Section Cards */
 .section-card {
     border-radius: 15px;
     padding: 20px;
@@ -88,32 +76,25 @@
 {% endblock %}
 
 {% block body %}
-
 <div class="container mt-5">
 
-<!-- ✅ Hidden Upload Form -->
 <form method="POST" enctype="multipart/form-data" id="uploadForm" style="display:none;">
     {% csrf_token %}
     <input type="file" name="profile" id="fileInput" accept="image/*"
            onchange="document.getElementById('uploadForm').submit();">
 </form>
 
-<!-- ✅ Full Image Popup -->
 <div id="imgModal" onclick="closeModal()">
     <span class="close-btn">&times;</span>
     <img id="modalImage">
 </div>
 
-<!-- ✅ Profile Card -->
 <div class="profile-card mb-5">
-
-    <!-- Profile Image -->
     <img src="{% if profile.profile %}{{ profile.profile.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}"
          class="profile-thumb"
          onclick="openImageModal(this.src)"
          ondblclick="document.getElementById('fileInput').click()"
          title="Click to view • Double click to change">
-
     <div>
         <h3>{{ user.username }}</h3>
         <p class="mb-1">{{ user.email }}</p>
@@ -121,7 +102,6 @@
     </div>
 </div>
 
-<!-- ✅ Quick Action Cards -->
 <div class="row text-center mb-4">
     <div class="col-md-3 mb-3"><div class="action-box">
         <i class="bi bi-heart-fill text-danger fs-2"></i>
@@ -137,12 +117,20 @@
         <a href="{% url 'view_cart' %}" class="btn btn-outline-primary btn-sm">View</a>
     </div></div>
 
-    <div class="col-md-3 mb-3"><div class="action-box">
+    <!-- ✅ Updated Orders Box -->
+    <div class="col-md-3 mb-3">
+      <div class="action-box">
         <i class="bi bi-bag-check-fill text-success fs-2"></i>
-        <h6>Orders</h6>
-        <p>{{ orders.count|default:0 }}</p>
-        <a href="#" class="btn btn-outline-success btn-sm disabled">Coming Soon</a>
-    </div></div>
+        <h6>Orders Received</h6>
+        {% if sold_orders %}
+          <p>{{ sold_orders.count }} total orders</p>
+          <a href="#orders-received" class="btn btn-outline-success btn-sm">View</a>
+        {% else %}
+          <p>No orders yet</p>
+          <a href="#" class="btn btn-outline-secondary btn-sm disabled">View</a>
+        {% endif %}
+      </div>
+    </div>
 
     <div class="col-md-3 mb-3"><div class="action-box">
         <i class="bi bi-book-half text-warning fs-2"></i>
@@ -160,7 +148,10 @@
         {% if orders %}
             <ul class="list-group">
             {% for o in orders|slice:":5" %}
-                <li class="list-group-item d-flex justify-content-between">Order #{{ o.id }} <span class="badge bg-success">Placed</span></li>
+                <li class="list-group-item d-flex justify-content-between">
+                    Order #{{ o.id }}
+                    <span class="badge bg-success">Placed</span>
+                </li>
             {% endfor %}
             </ul>
         {% else %}
@@ -173,7 +164,10 @@
         {% if selling_books %}
             <ul class="list-group">
             {% for b in selling_books|slice:":5" %}
-                <li class="list-group-item d-flex justify-content-between">{{ b.book_title }} <span class="badge bg-warning text-dark">₹{{ b.price }}</span></li>
+                <li class="list-group-item d-flex justify-content-between">
+                    {{ b.book_title }}
+                    <span class="badge bg-warning text-dark">₹{{ b.price }}</span>
+                </li>
             {% endfor %}
             </ul>
         {% else %}
@@ -186,7 +180,10 @@
         {% if cart_items %}
             <ul class="list-group">
             {% for c in cart_items|slice:":5" %}
-                <li class="list-group-item d-flex justify-content-between">{{ c.book.book_title }} <span class="badge bg-primary">₹{{ c.book.price }}</span></li>
+                <li class="list-group-item d-flex justify-content-between">
+                    {{ c.book.book_title }}
+                    <span class="badge bg-primary">₹{{ c.book.price }}</span>
+                </li>
             {% endfor %}
             </ul>
         {% else %}
@@ -211,8 +208,28 @@
         {% endif %}
     </div></div>
 
-</div>
+    <!-- ✅ Orders Received Section -->
+    <div id="orders-received" class="col-12 mb-4">
+      <div class="section-card">
+        <h5>Orders Received (Your Uploaded Books)</h5>
+        {% if sold_orders %}
+          <ul class="list-group">
+            {% for order in sold_orders %}
+              <li class="list-group-item">
+                <strong>{{ order.book.book_title }}</strong><br>
+                Buyer: {{ order.user.username }} <br>
+                <small>Ordered on: {{ order.created_at|date:"M d, Y" }}</small>
+                <span class="badge bg-success float-end">₹{{ order.book.price }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No one has ordered your books yet.</p>
+        {% endif %}
+      </div>
+    </div>
 
+</div>
 </div>
 
 <script>

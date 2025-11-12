@@ -1,40 +1,95 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}
   <title>Your Cart - Book Bazaar</title>
 {% endblock title %}
 
 {% block extra_css %}
-<!-- Optional additional styles if needed -->
+<style>
+  .cart-container {
+    max-width: 800px;
+    margin: 50px auto;
+  }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cart-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .cart-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+
+  .cart-info h5 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .cart-info p {
+    margin: 0;
+    color: gray;
+    font-size: 0.9rem;
+  }
+
+  .total-price {
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+</style>
 {% endblock extra_css %}
 
 {% block body %}
-<div class="container mt-5 mb-5">
-  <h2 class="mb-4">Your Shopping Cart</h2>
+<div class="container cart-container">
+  <h2 class="mb-4">🛒 Your Shopping Cart</h2>
 
-  {% if cart_items %}
+  {% if items %}
     <ul class="list-group mb-4">
-      {% for item in cart_items %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="mb-1">{{ item.book.title }}</h5>
-            <p class="mb-1 text-muted">₹{{ item.book.price }}</p>
+      {% for item in items %}
+        <li class="list-group-item cart-item">
+          <div class="cart-left">
+            <img 
+              src="{% if item.book.book_photo %}{{ item.book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" 
+              alt="{{ item.book.book_title }}" 
+              class="cart-img"
+            />
+            <div class="cart-info">
+              <h5>{{ item.book.book_title }}</h5>
+              <p>₹{{ item.book.price }}</p>
+            </div>
           </div>
+
           <form method="POST" action="{% url 'remove_from_cart' item.id %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Remove</button>
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i> Remove
+            </button>
           </form>
         </li>
       {% endfor %}
     </ul>
 
     <div class="text-end">
-      <h5>Total Price: ₹{{ total_price }}</h5>
-      <a href="{% url 'checkout' %}" class="btn btn-success mt-2"><i class="bi bi-cash-stack"></i> Proceed to Checkout</a>
+      <h5 class="total-price">Total: ₹{{ total }}</h5>
+      <a href="{% url 'checkout' %}" class="btn btn-success mt-2">
+        <i class="bi bi-cash-stack"></i> Proceed to Checkout
+      </a>
     </div>
   {% else %}
-    <div class="alert alert-info">
-      Your cart is currently empty. <a href="{% url 'book' %}">Browse books</a> to add items!
+    <div class="alert alert-info text-center">
+      🛍️ Your cart is empty. 
+      <a href="{% url 'book' %}" class="alert-link">Browse books</a> to add some!
     </div>
   {% endif %}
 </div>

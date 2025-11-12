@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     Nuser, LoginActivity, Book, Contact, Payment, 
-    Cart, CartItem, OrderedBook, Order, Wishlist, Review
+    Cart, CartItem, OrderedBook, Order, Wishlist, Review,Notification
 )
 
 # Unregister and re-register the built-in User with custom admin
@@ -88,3 +88,11 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ('rating',)
     search_fields = ('user__username', 'comment')
     ordering = ('-created_at',)
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'message', 'is_read', 'created_at')
+    list_filter = ('is_read', 'created_at')
+    search_fields = ('user__username', 'message')
+    ordering = ('-created_at',)
+
