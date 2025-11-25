@@ -14,11 +14,6 @@
     margin-bottom: 20px;
     border-radius: 15px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
-  }
-
-  .cart-item:hover {
-    transform: scale(1.01);
   }
 
   .cart-item img {
@@ -28,65 +23,131 @@
     border-radius: 10px;
   }
 
-  .cart-details {
-    flex: 1;
-  }
-
-  .cart-actions {
+  .qty-box {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
   }
 
-  .btn-danger {
-    background-color: #dc3545;
+  .qty-btn {
+    width: 30px;
+    height: 30px;
     border: none;
+    background: #0d6efd;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
   }
 
-  .btn-danger:hover {
-    background-color: #bb2d3b;
+  .qty-input {
+    width: 45px;
+    text-align: center;
+    font-size: 16px;
+    padding: 3px;
+  }
+
+  .subtotal {
+    font-weight: bold;
+    font-size: 1.1rem;
   }
 
   .cart-total {
-    text-align: right;
     font-size: 1.4rem;
     font-weight: bold;
-  }
-
-  .checkout-btn {
-    float: right;
-    margin-top: 10px;
+    text-align: right;
   }
 </style>
 {% endblock %}
 
 {% block body %}
+
 <div class="container mt-5">
   <h2 class="mb-4"><i class="bi bi-cart4"></i> Your Cart</h2>
 
   {% if items %}
     {% for item in items %}
     <div class="cart-item">
-      <img src="{% if item.book.book_photo %}{{ item.book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" alt="{{ item.book.book_title }}">
-      <div class="cart-details">
+      <img src="{% if item.book.book_photo %}{{ item.book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}">
+      
+      <div class="flex-grow-1">
         <h5>{{ item.book.book_title }}</h5>
-        <p><strong>Author:</strong> {{ item.book.author }}</p>
-        <p><strong>Price:</strong> ₹{{ item.book.price }}</p>
+        <p>Author: {{ item.book.author }}</p>
+        <p>Price: ₹<span class="price">{{ item.book.price }}</span></p>
+
+        <!-- Quantity Box -->
+        <div class="qty-box">
+          <button class="qty-btn minus">-</button>
+          <input type="text" class="qty-input" value="{{ item.quantity }}" 
+                 data-stock="{{ item.book.quantity }}">
+          <button class="qty-btn plus">+</button>
+        </div>
+
+        <p class="subtotal mt-2">Subtotal: ₹<span class="subtotal-val">{{ item.book.price|floatformat:0|add:""|floatformat:2 }}</span></p>
       </div>
-      <div class="cart-actions">
-        <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-sm btn-danger">
-          <i class="bi bi-trash"></i> Remove
+
+      <div>
+        <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-danger btn-sm">
+          Remove
         </a>
       </div>
     </div>
     {% endfor %}
 
-    <div class="cart-total">Total: ₹{{ total }}</div>
-    <a href="{% url 'checkout' %}" class="btn btn-success checkout-btn">
-      <i class="bi bi-bag-check"></i> Proceed to Checkout
+    <div class="cart-total mt-3">
+      Total: ₹<span id="grandTotal">0</span>
+    </div>
+
+    <a href="{% url 'checkout' %}" class="btn btn-success float-end mt-3">
+      Proceed to Checkout
     </a>
+
   {% else %}
     <p>Your cart is empty.</p>
   {% endif %}
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  updateTotal();
+
+  document.querySelectorAll(".cart-item").forEach(cartItem => {
+    const minusBtn = cartItem.querySelector(".minus");
+    const plusBtn = cartItem.querySelector(".plus");
+    const qtyInput = cartItem.querySelector(".qty-input");
+    const price = parseFloat(cartItem.querySelector(".price").innerText);
+    const subtotalVal = cartItem.querySelector(".subtotal-val");
+    const maxStock = parseInt(qtyInput.dataset.stock);
+
+    function updateSubtotal() {
+      let qty = parseInt(qtyInput.value);
+      if (qty < 1) qty = 1;
+      if (qty > maxStock) qty = maxStock;
+      qtyInput.value = qty;
+      subtotalVal.innerText = (price * qty).toFixed(2);
+      updateTotal();
+    }
+
+    minusBtn.addEventListener("click", function () {
+      qtyInput.value = parseInt(qtyInput.value) - 1;
+      updateSubtotal();
+    });
+
+    plusBtn.addEventListener("click", function () {
+      qtyInput.value = parseInt(qtyInput.value) + 1;
+      updateSubtotal();
+    });
+
+    qtyInput.addEventListener("keyup", updateSubtotal);
+  });
+});
+
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll(".subtotal-val").forEach(sub => {
+    total += parseFloat(sub.innerText);
+  });
+  document.getElementById("grandTotal").innerText = total.toFixed(2);
+}
+</script>
+
 {% endblock %}

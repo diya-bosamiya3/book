@@ -1,495 +1,471 @@
-{% extends "base.html" %}
-{% load static custom_tags %}
-
-{% block title %}Book Bazaar - Dashboard{% endblock %}
-
+{% extends 'base.html' %}
+{% load static %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'book_app/style.css' %}">
 <style>
-.review-section {
-  margin-top: 30px;
+/* =========================
+   Book Bazaar - style.css
+   Place: static/book_app/style.css
+   ========================= */
+
+:root{
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --primary-1: #6C63FF;
+  --primary-2: #8F88FF;
+  --muted: #6b7280;
+  --glass: rgba(255,255,255,0.75);
+  --radius: 14px;
+  --shadow-soft: 0 10px 30px rgba(20,20,40,0.06);
 }
-/* Floating Icon */
-#chatbot-icon {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-  background: #2d2d2d;
+
+/* Basic reset & container */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background: linear-gradient(180deg,var(--bg) 0%, #eef0fb 100%);
+  color:#111827;
+  -webkit-font-smoothing:antialiased;
+}
+
+.container{
+  max-width:1150px;
+  margin:0 auto;
+  padding:28px;
+}
+
+/* HERO */
+.hero{
+  background: linear-gradient(135deg,var(--primary-1),var(--primary-2));
+  color:#fff;
+  border-radius: 18px;
+  padding:36px;
+  display:flex;
+  gap:20px;
+  align-items:center;
+  box-shadow:var(--shadow-soft);
+}
+.hero-left{flex:1}
+.hero-right{width:300px;display:flex;justify-content:center}
+.badge{display:inline-block;background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:999px;font-weight:600}
+h1{font-size:1.9rem;margin:10px 0}
+.lead{opacity:0.95;margin-bottom:14px}
+
+/* CTA buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  text-decoration:none;
+}
+.btn-primary{
+  background: linear-gradient(90deg,var(--primary-1),var(--primary-2));
+  color:white;
+  box-shadow: 0 8px 22px rgba(108,99,255,0.16);
+}
+.btn-ghost{
+  background: rgba(255,255,255,0.12);
   color: white;
-  font-size: 1.8rem;
-  padding: 12px 16px;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  transition: transform 0.2s;
-  z-index: 1000;
-}
-#chatbot-icon:hover {
-  transform: scale(1.1);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
-/* Fullscreen Chatbot */
-#chatbot-fullpage {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #fafafa;
-  z-index: 2000;
-  display: none; /* Hidden by default */
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  animation: fadeIn 0.3s ease-in-out;
+/* FEATURES & CARDS */
+.features{margin-top:22px;display:grid;grid-template-columns:1fr 320px;gap:22px}
+.feature-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{
+  background:var(--card);
+  padding:18px;
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(12,12,20,0.04);
+  transition:transform .18s ease, box-shadow .18s ease;
 }
-.hidden {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(23,23,27,0.08)}
+.card h3{margin:8px 0}
+
+/* Trending styles */
+.muted{color:var(--muted)}
+.trending-list{margin:12px 0 0;padding-left:18px;color:var(--muted)}
+.trending-actions{margin-top:12px;display:flex;gap:10px;align-items:center}
+
+/* BOOK GRID */
+.section{margin-top:28px}
+.section h2{font-size:1.2rem;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.book-card{
+  background:linear-gradient(180deg,var(--glass),rgba(255,255,255,0.98));
+  padding:14px;border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  box-shadow:0 8px 24px rgba(12,12,20,0.04)
+}
+.book-card img{width:100%;height:240px;object-fit:cover;border-radius:8px}
+.meta{margin-top:12px;width:100%}
+.price{font-weight:700;margin-top:8px}
+.btn-small{padding:8px 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;margin-top:10px}
+.btn-view{background: linear-gradient(90deg,var(--primary-1),var(--primary-2));color:white}
+.btn-disabled{background:#e6e7ea;color:#9aa0b0;cursor:not-allowed}
+
+/* REVIEWS */
+.reviews{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:20px}
+.review{padding:16px;border-radius:12px;background:var(--card);box-shadow:0 8px 28px rgba(17,24,39,0.04)}
+.review .meta{display:flex;gap:12px;align-items:center}
+.avatar{width:52px;height:52px;border-radius:999px;object-fit:cover}
+blockquote{margin:10px 0;color:var(--muted);font-style:italic}
+.stars{color:#f6b93b}
+
+/* FOOTER */
+footer{margin:26px 0 70px;text-align:center;color:var(--muted);font-size:0.9rem}
+
+/* ---------------------------
+   BOTTOM POPUP CHAT BAR (Minimal Clean)
+   --------------------------- */
+
+/* Chat toggle (floating) */
+.chat-toggle{
+  position:fixed;
+  right:20px;
+  bottom:18px;
+  width:56px;
+  height:56px;
+  border-radius:999px;
+  border:none;
+  background: linear-gradient(135deg,var(--primary-1),var(--primary-2));
+  color:white;
+  box-shadow:0 14px 36px rgba(20,20,60,0.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:1400;
+  font-size:20px;
 }
 
-#chatbot-container {
-  width: 90%;
-  max-width: 600px;
-  height: 80%;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 25px rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: slideUp 0.4s ease-in-out;
+/* Popup container */
+.chat-popup{
+  position:fixed;
+  right:20px;
+  bottom:86px; /* above the toggle */
+  width:340px;
+  max-width:calc(100% - 40px);
+  background: #fff;
+  border-radius:12px;
+  box-shadow:0 18px 60px rgba(20,20,60,0.12);
+  transform: translateY(18px) scale(.99);
+  opacity:0;
+  pointer-events:none;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease;
+  z-index:1400;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 }
 
-#chatbot-header-full {
-  background: #2d2d2d;
-  color: white;
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* opened state */
+.chat-popup.open{
+  transform: translateY(0) scale(1);
+  opacity:1;
+  pointer-events:auto;
 }
 
-#close-fullchat {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 1.3rem;
-  cursor: pointer;
+/* header */
+.chat-header{
+  padding:12px 14px;
+  background: #fff;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #f1f3f8;
+}
+.chat-title strong{display:block}
+.chat-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* body */
+.chat-body{
+  padding:12px;
+  max-height:310px;
+  overflow:auto;
+  background:linear-gradient(180deg,#fbfcff,#fff);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 
-#chatbot-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  background: #f7f7f7;
+/* messages */
+.msg{
+  padding:10px 12px;
+  border-radius:12px;
+  max-width:78%;
+  font-size:14px;
+  line-height:1.35;
+}
+.bot-msg{
+  background:#f1f5ff;
+  color:#0b1220;
+  align-self:flex-start;
+  border-bottom-left-radius:6px;
+}
+.user-msg{
+  background:#e8fdf6;
+  color:#023e2a;
+  align-self:flex-end;
+  border-bottom-right-radius:6px;
 }
 
-#chatbot-input {
-  display: flex;
-  border-top: 1px solid #ddd;
+/* typing indicator (slightly muted) */
+.typing{opacity:.85;font-style:italic;color:var(--muted)}
+
+/* footer (input) */
+.chat-footer{
+  display:flex;
+  gap:8px;
+  padding:10px;
+  border-top:1px solid #f1f3f8;
+  background:white;
 }
-#chatbot-input input {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  outline: none;
+.chat-footer input{
+  flex:1;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #e6e9f2;
+  outline:none;
+  font-size:14px;
 }
-#chatbot-input button {
-  background: #2d2d2d;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-#chatbot-input button:hover {
-  background: #444;
+.chat-send{
+  background: linear-gradient(90deg,var(--primary-1),var(--primary-2));
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
 }
 
-.user-msg {
-  background: #e1ffc7;
-  padding: 8px;
-  border-radius: 8px;
-  margin: 6px 0;
-  align-self: flex-end;
-}
-.bot-msg {
-  background: #f1f1f1;
-  padding: 8px;
-  border-radius: 8px;
-  margin: 6px 0;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes slideUp {
-  from { transform: translateY(50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.review-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-}
-
-.review-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  width: 250px;
-  box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
-  text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.review-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0px 5px 15px rgba(0,0,0,0.12);
-}
-
-.avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #ddd;
-  margin-bottom: 10px;
-}
-
-blockquote {
-  font-style: italic;
-  color: #555;
-  margin: 10px 0;
-}
-
-.stars {
-  margin: 8px 0;
-}
-.star {
-  font-size: 1.2rem;
-}
-.star.filled {
-  color: gold;
-}
-.star.empty {
-  color: lightgray;
-}
-
-.review-date {
-  font-size: 0.85rem;
-  color: gray;
-  margin-top: 5px;
-}
-
-.no-reviews {
-  color: gray;
-}
-.no-reviews a {
-  color: #007bff;
-  text-decoration: none;
-}
-.no-reviews a:hover {
-  text-decoration: underline;
-}
-
-/* 💬 Floating Icon */
-#chatbot-icon {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-  background: #2d2d2d;
-  color: white;
-  font-size: 1.8rem;
-  padding: 12px 16px;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  transition: transform 0.2s;
-  z-index: 1000;
-}
-#chatbot-icon:hover {
-  transform: scale(1.1);
-}
-
-/* 🧠 Fullscreen Chatbot */
-#chatbot-fullpage {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #fafafa;
-  z-index: 2000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  animation: fadeIn 0.3s ease-in-out;
-}
-.hidden { display: none; }
-
-#chatbot-container {
-  width: 90%;
-  max-width: 600px;
-  height: 80%;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 25px rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: slideUp 0.4s ease-in-out;
-}
-
-#chatbot-header-full {
-  background: #2d2d2d;
-  color: white;
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#close-fullchat {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 1.3rem;
-  cursor: pointer;
-}
-
-#chatbot-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  background: #f7f7f7;
-}
-
-#chatbot-input {
-  display: flex;
-  border-top: 1px solid #ddd;
-}
-#chatbot-input input {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  outline: none;
-}
-#chatbot-input button {
-  background: #2d2d2d;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-#chatbot-input button:hover {
-  background: #444;
-}
-
-.user-msg {
-  background: #e1ffc7;
-  padding: 8px;
-  border-radius: 8px;
-  margin: 6px 0;
-  align-self: flex-end;
-}
-.bot-msg {
-  background: #f1f1f1;
-  padding: 8px;
-  border-radius: 8px;
-  margin: 6px 0;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes slideUp {
-  from { transform: translateY(50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.hidden {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
+/* responsive */
+@media (max-width:480px){
+  .chat-popup{right:12px; left:12px; width:auto; bottom:80px}
+  .chat-toggle{right:12px; bottom:16px}
+  .hero-right{display:none}
 }
 </style>
 {% endblock %}
-
 {% block body %}
-<div class="content-wrapper">
-  <!-- Hero Section -->
-  <div class="hero-section">
-    <div class="hero-text">
-      <h1>📚 Welcome to Book Bazaar</h1>
-      <p>Your one-stop shop for buying & selling vintage and rare books.</p>
-      <div class="hero-buttons">
-        <button onclick="location.href='{% url 'selling' %}'" class="btn sell">Sell a Book</button>
-        <button onclick="location.href='{% url 'book' %}'" class="btn browse">Browse Books</button>
-      </div>
+
+
+<div class="container">
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+        <div class="hero-left">
+            <div class="badge">📚 Book Bazaar</div>
+
+            <h1>Discover Rare, Vintage & Collector Edition Books</h1>
+            <p class="lead">Buy, Sell and Explore unique books curated for collectors and enthusiasts.</p>
+
+            <div class="hero-cta">
+                <a href="{% url 'selling' %}" class="btn btn-primary">Sell a Book</a>
+                <a href="{% url 'book' %}" class="btn btn-ghost">Browse Books</a>
+            </div>
+        </div>
+
+        <!-- INLINE SVG (no partial) -->
+        <div class="hero-right">
+            <svg width="260" height="260" viewBox="0 0 300 300" fill="none">
+                <rect x="70" y="40" width="160" height="220" rx="12"
+                      fill="#ffffff" stroke="#d0d3ff" stroke-width="3"/>
+                <rect x="90" y="70" width="120" height="15" rx="4" fill="#d0d3ff"/>
+                <rect x="90" y="100" width="120" height="15" rx="4" fill="#eceeff"/>
+                <rect x="90" y="130" width="120" height="15" rx="4" fill="#d0d3ff"/>
+                <rect x="90" y="160" width="120" height="15" rx="4" fill="#eceeff"/>
+                <rect x="90" y="190" width="120" height="15" rx="4" fill="#d0d3ff"/>
+            </svg>
+        </div>
+    </header>
+
+
+   <!-- ⭐ TOP 5 PICKS (Latest Added Books) -->
+<section class="top-picks container mb-5">
+    <h3 class="text-center fw-bold mb-4">🔥 Top 5 Picks</h3>
+
+    <div class="row g-4">
+        {% for book in top_books %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="book-card shadow-sm rounded-4 overflow-hidden">
+
+                <img  
+                    src="{% if book.book_photo %}{{ book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}"
+                    class="book-img"
+                    style="cursor:pointer;width:100%;height:240px;object-fit:cover;"
+                    onclick="previewBook(
+                        '{{ book.book_photo.url|default_if_none:"" }}',
+                        `{{ book.book_title|escapejs }}`,
+                        `{{ book.author|escapejs }}`,
+                        `{{ book.price }}`,
+                        `{{ book.description|default:"No description available"|escapejs }}`,
+                        `{{ book.quantity }}`
+                    )"
+                />
+
+                <div class="p-3">
+                    <h5 class="fw-semibold">{{ book.book_title|truncatechars:28 }}</h5>
+                    <p class="text-muted small mb-1"><i class="bi bi-person"></i> {{ book.author }}</p>
+
+                    <p class="price fw-bold mb-1">
+                        <i class="bi bi-currency-rupee"></i>{{ book.price }}
+                    </p>
+
+                    {% if book.quantity > 0 %}
+                        <span class="text-success small fw-semibold">In Stock</span>
+                    {% else %}
+                        <span class="text-danger small fw-semibold">Out of Stock</span>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
     </div>
-  </div>
-
-  <!-- Main Features -->
-  <div class="main-content">
-    <section class="features">
-      <h2>Why Choose Book Bazaar?</h2>
-      <div class="cards">
-        <div class="card animated">
-          📘 <strong>Buy Rare Books</strong>
-          <p>Signed copies, vintage gems, and collector’s items await you.</p>
-          <a href="{% url 'book' %}">Browse Books</a>
-        </div>
-        <div class="card animated delay-1">
-          💰 <strong>Sell Your Books</strong>
-          <p>List your used books easily and get fair returns.</p>
-          <a href="{% url 'selling' %}">Sell Now</a>
-        </div>
-        <div class="card animated delay-2">
-          ⭐ <strong>Expert Appraisal</strong>
-          <p>Get authentic valuations from our team of book experts.</p>
-          <a href="#">Get Appraisal</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="features">
-      <h2>Why Vintage Books?</h2>
-      <div class="cards">
-        <div class="card animated">
-          🔍 <strong>Authenticated</strong>
-          <p>Each book is verified for quality and authenticity.</p>
-        </div>
-        <div class="card animated delay-1">
-          🚚 <strong>Secure Shipping</strong>
-          <p>Insured delivery with premium packaging.</p>
-        </div>
-        <div class="card animated delay-2">
-          📏 <strong>Money-Back Guarantee</strong>
-          <p>Return within 30 days if not satisfied.</p>
-        </div>
-      </div>
-    </section>
-  </div>
-</div>
-
-<!-- Reviews Section -->
-<section class="features review-section">
-  <h2>🌟 What Our Users Say</h2>
-  {% if reviews %}
-    <div class="review-grid">
-      {% for review in reviews %}
-        <div class="review-card">
-          <img src="{% static 'book_app/userpfp.jpg' %}" alt="User Avatar" class="avatar">
-          <h5>{{ review.user.username }}</h5>
-          <p class="text-muted">Book Bazaar Reviewer</p>
-          <blockquote>“{{ review.comment }}”</blockquote>
-          <div class="stars">
-            {% for i in review.rating|times %}
-              <span class="star filled">★</span>
-            {% endfor %}
-            {% for i in 5|subtract:review.rating|times %}
-              <span class="star empty">★</span>
-            {% endfor %}
-          </div>
-          <div class="review-date">{{ review.created_at|date:"d M Y" }}</div>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="no-reviews">No reviews yet. <a href="#">Be the first to review!</a></p>
-  {% endif %}
 </section>
 
-<!-- 💬 Floating Chatbot Icon -->
-<div id="chatbot-icon" onclick="openFullChatbot()">💬</div>
 
-<!-- 🧠 Full-Page Chatbot -->
-<div id="chatbot-fullpage" class="hidden">
-  <div id="chatbot-container">
-    <div id="chatbot-header-full">
-      <strong>BookBot 🤖</strong>
-      <button id="close-fullchat" onclick="closeFullChatbot()">✖</button>
-    </div>
 
-    <div id="chatbot-body">
-      <div id="chatbot-messages"></div>
-    </div>
+  
 
-    <div id="chatbot-input">
-      <input type="text" id="chatbot-query" placeholder="Ask for book suggestions..." />
-      <button onclick="sendChat()">➤</button>
-    </div>
-  </div>
+
+    <!-- REVIEWS -->
+    <section class="section">
+        <h2>🌟 What Users Say</h2>
+
+        <div class="reviews">
+            {% for review in reviews %}
+            <div class="review">
+                <blockquote>“{{ review.comment }}”</blockquote>
+                <div class="review-user">– {{ review.user.username }}</div>
+            </div>
+            {% empty %}
+            <p>No reviews yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+
 </div>
 
-<script>
-function openFullChatbot() {
-  const chatbot = document.getElementById("chatbot-fullpage");
-  const chatMessages = document.getElementById("chatbot-messages");
 
-  chatbot.classList.remove("hidden");
-  chatbot.style.display = "flex";
-  document.getElementById("chatbot-icon").classList.add("hidden");
+<!-- CHAT POPUP (Apple-like minimal) -->
+<div id="chat-popup" class="chat-popup">
+    <div class="chat-header">
+        <span>💬 BookBot</span>
+        <button id="chat-close">×</button>
+    </div>
 
-  // ✅ Show greeting only if it's empty (first open)
-  if (chatMessages.innerHTML.trim() === "") {
-    chatMessages.innerHTML = `
-      <div class='bot-msg'>
-        <b>BookBot:</b> Hi! 👋 I’m <strong>BookBot</strong> — your personal reading buddy.<br>
-        Ask me for book suggestions, for example:<br>
-        <em>"Suggest books like Atomic Habits"</em> or <em>"Best fantasy novels"</em>.
-      </div>`;
+    <div id="chat-body" class="chat-body"></div>
+
+    <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Ask BookBot anything..." autocomplete="off">
+        <button id="chat-send">Send</button>
+    </div>
+</div>
+
+<!-- Floating bubble -->
+<div id="chat-bubble" class="chat-bubble">💬</div>
+
+<script>// YEAR
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Chat selectors
+const chatIcon = document.getElementById('chatbot-icon');
+const overlay = document.getElementById('chat-overlay');
+const closeChat = document.getElementById('close-chat');
+const sendBtn = document.getElementById('send-btn');
+const chatInput = document.getElementById('chat-input');
+const chatBody = document.getElementById('chat-body');
+
+// Open / Close Chat
+function openChat(){
+  overlay.style.display = 'flex';
+  overlay.setAttribute('aria-hidden','false');
+  chatInput.focus();
+}
+function closeChatPanel(){
+  overlay.style.display = 'none';
+  overlay.setAttribute('aria-hidden','true');
+  chatIcon.focus();
+}
+
+chatIcon.addEventListener('click', openChat);
+closeChat.addEventListener('click', closeChatPanel);
+overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeChatPanel(); });
+
+// Create Message
+function appendMessage(text, role='bot'){
+  const el = document.createElement('div');
+  el.className = 'msg ' + (role === 'bot' ? 'bot' : 'user');
+  el.innerHTML = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  chatBody.appendChild(el);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// Bot reply logic
+function simulateBotReply(query){
+  const lower = query.toLowerCase();
+
+  if(lower.includes('atomic habits')){
+    return 'If you like <strong>Atomic Habits</strong>, try:<ul><li>The Power of Habit</li><li>Tiny Habits</li><li>Make Time</li></ul>';
   }
-}
-
-function closeFullChatbot() {
-  const chatbot = document.getElementById("chatbot-fullpage");
-  chatbot.classList.add("hidden");
-  chatbot.style.display = "none";
-  document.getElementById("chatbot-icon").classList.remove("hidden");
-}
-
-async function sendChat() {
-  const input = document.getElementById("chatbot-query");
-  const message = input.value.trim();
-  if (!message) return;
-
-  const chatBox = document.getElementById("chatbot-messages");
-  chatBox.innerHTML += `<div class='user-msg'><b>You:</b> ${message}</div>`;
-  input.value = "";
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  chatBox.innerHTML += `<div id="typing" class="bot-msg">🤖 BookBot is typing...</div>`;
-
-  try {
-    const res = await fetch("{% url 'ai_book_recommend' %}", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ message })
-    });
-
-    const data = await res.json();
-    document.getElementById("typing").remove();
-
-    if (data.reply) {
-      chatBox.innerHTML += `<div class='bot-msg'><b>BookBot:</b> ${data.reply}</div>`;
-    } else {
-      chatBox.innerHTML += `<div class='bot-msg'><b>BookBot:</b> Hmm... I didn’t catch that. Try rephrasing your question.</div>`;
-    }
-
-  } catch (error) {
-    document.getElementById("typing").remove();
-    chatBox.innerHTML += `<div class='bot-msg'><b>BookBot:</b> ⚠️ Connection error. Please try again.</div>`;
+  if(lower.includes('romance')){
+    return 'Top romance picks:<ul><li>Pride and Prejudice</li><li>The Time Traveler\'s Wife</li><li>The Night Circus</li></ul>';
+  }
+  if(lower.includes('suggest') || lower.includes('recommend')){
+    return 'Readers also enjoyed:<ul><li>Sapiens</li><li>The Alchemist</li><li>The Goldfinch</li></ul>';
   }
 
-  chatBox.scrollTop = chatBox.scrollHeight;
+  return 'Here are a few suggestions:<ul><li>Educated</li><li>Norwegian Wood</li><li>The Great Gatsby</li></ul>';
 }
+
+// Send message handler
+function handleSend(){
+  const text = chatInput.value.trim();
+  if(!text) return;
+
+  appendMessage(text, 'user');
+
+  chatInput.value = '';
+
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'msg bot';
+  typing.textContent = '🤖 BookBot is typing...';
+  chatBody.appendChild(typing);
+
+  chatBody.scrollTop = chatBody.scrollHeight;
+
+  setTimeout(()=>{
+    typing.remove();
+    const reply = simulateBotReply(text);
+
+    const botMsg = document.createElement('div');
+    botMsg.className = 'msg bot';
+    botMsg.innerHTML = reply;
+
+    chatBody.appendChild(botMsg);
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+  }, 800 + Math.random()*700);
+}
+
+sendBtn.addEventListener('click', handleSend);
+chatInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleSend(); });
+
+// Close on Escape
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && overlay.style.display === 'flex') closeChatPanel();
+});
 </script>
 
 {% endblock %}
+
+
+

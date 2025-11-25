@@ -1,145 +1,248 @@
-body {
-  background: #faf7ef;
-  font-family: "Poppins", sans-serif;
+/* =========================
+   Book Bazaar - style.css
+   Place: static/book_app/style.css
+   ========================= */
+
+:root{
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --primary-1: #6C63FF;
+  --primary-2: #8F88FF;
+  --muted: #6b7280;
+  --glass: rgba(255,255,255,0.75);
+  --radius: 14px;
+  --shadow-soft: 0 10px 30px rgba(20,20,40,0.06);
 }
 
-/* 🌟 Hero Section */
-.hero-section {
-  height: 45vh;
-  background: url('https://images.unsplash.com/photo-1528207776546-365bb710ee93') center/cover;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Basic reset & container */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background: linear-gradient(180deg,var(--bg) 0%, #eef0fb 100%);
+  color:#111827;
+  -webkit-font-smoothing:antialiased;
+}
+
+.container{
+  max-width:1150px;
+  margin:0 auto;
+  padding:28px;
+}
+
+/* HERO */
+.hero{
+  background: linear-gradient(135deg,var(--primary-1),var(--primary-2));
+  color:#fff;
+  border-radius: 18px;
+  padding:36px;
+  display:flex;
+  gap:20px;
+  align-items:center;
+  box-shadow:var(--shadow-soft);
+}
+.hero-left{flex:1}
+.hero-right{width:300px;display:flex;justify-content:center}
+.badge{display:inline-block;background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:999px;font-weight:600}
+h1{font-size:1.9rem;margin:10px 0}
+.lead{opacity:0.95;margin-bottom:14px}
+
+/* CTA buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  text-decoration:none;
+}
+.btn-primary{
+  background: linear-gradient(90deg,var(--primary-1),var(--primary-2));
+  color:white;
+  box-shadow: 0 8px 22px rgba(108,99,255,0.16);
+}
+.btn-ghost{
+  background: rgba(255,255,255,0.12);
   color: white;
-  text-align: center;
-  position: relative;
-}
-.hero-section::after {
-  content:'';
-  position: absolute;
-  inset:0;
-  backdrop-filter: blur(4px);
-  background: rgba(0,0,0,.45);
-}
-.hero-section .container {
-  position: relative;
-  z-index: 2;
-}
-.hero-section h1 {
-  font-size: 2.4rem;
-  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
-/* 🔍 Search Box */
-.search-box {
-  position: relative;
-  z-index: 2000;
+/* FEATURES & CARDS */
+.features{margin-top:22px;display:grid;grid-template-columns:1fr 320px;gap:22px}
+.feature-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{
+  background:var(--card);
+  padding:18px;
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(12,12,20,0.04);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(23,23,27,0.08)}
+.card h3{margin:8px 0}
+
+/* Trending styles */
+.muted{color:var(--muted)}
+.trending-list{margin:12px 0 0;padding-left:18px;color:var(--muted)}
+.trending-actions{margin-top:12px;display:flex;gap:10px;align-items:center}
+
+/* BOOK GRID */
+.section{margin-top:28px}
+.section h2{font-size:1.2rem;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.book-card{
+  background:linear-gradient(180deg,var(--glass),rgba(255,255,255,0.98));
+  padding:14px;border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  box-shadow:0 8px 24px rgba(12,12,20,0.04)
+}
+.book-card img{width:100%;height:240px;object-fit:cover;border-radius:8px}
+.meta{margin-top:12px;width:100%}
+.price{font-weight:700;margin-top:8px}
+.btn-small{padding:8px 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;margin-top:10px}
+.btn-view{background: linear-gradient(90deg,var(--primary-1),var(--primary-2));color:white}
+.btn-disabled{background:#e6e7ea;color:#9aa0b0;cursor:not-allowed}
+
+/* REVIEWS */
+.reviews{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:20px}
+.review{padding:16px;border-radius:12px;background:var(--card);box-shadow:0 8px 28px rgba(17,24,39,0.04)}
+.review .meta{display:flex;gap:12px;align-items:center}
+.avatar{width:52px;height:52px;border-radius:999px;object-fit:cover}
+blockquote{margin:10px 0;color:var(--muted);font-style:italic}
+.stars{color:#f6b93b}
+
+/* FOOTER */
+footer{margin:26px 0 70px;text-align:center;color:var(--muted);font-size:0.9rem}
+
+/* ---------------------------
+   BOTTOM POPUP CHAT BAR (Minimal Clean)
+   --------------------------- */
+
+/* Chat toggle (floating) */
+.chat-toggle{
+  position:fixed;
+  right:20px;
+  bottom:18px;
+  width:56px;
+  height:56px;
+  border-radius:999px;
+  border:none;
+  background: linear-gradient(135deg,var(--primary-1),var(--primary-2));
+  color:white;
+  box-shadow:0 14px 36px rgba(20,20,60,0.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:1400;
+  font-size:20px;
 }
 
-/* 📚 Book Cards Grid */
-.book-card {
-  background: white;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0,0,0,.12);
-  transition: .3s;
-  cursor: pointer;
-}
-.book-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0,0,0,.20);
-}
-.book-card img {
-  width:100%;
-  height:240px;
-  object-fit:cover;
-}
-
-/* Info text inside card */
-.price {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #c49b00;
-}
-
-/* 🌟 Suggestion Dropdown */
-#suggestion-box {
+/* Popup container */
+.chat-popup{
+  position:fixed;
+  right:20px;
+  bottom:86px; /* above the toggle */
+  width:340px;
+  max-width:calc(100% - 40px);
   background: #fff;
-  color: #000;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  max-height: 220px;
-  overflow-y: auto;
-  display: none;
-  z-index: 99999;
-}
-.suggestion-item {
-  padding: 10px 12px;
-  font-size: 15px;
-  cursor: pointer;
-  color: #000;
-  border-bottom: 1px solid #eee;
-}
-.suggestion-item:hover {
-  background: #ffeaa7;
+  border-radius:12px;
+  box-shadow:0 18px 60px rgba(20,20,60,0.12);
+  transform: translateY(18px) scale(.99);
+  opacity:0;
+  pointer-events:none;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease;
+  z-index:1400;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 }
 
-/* ✅ BLUR Page Background When Preview Opens */
-.blur {
-  filter: blur(7px);
-  pointer-events: none;
-  user-select: none;
+/* opened state */
+.chat-popup.open{
+  transform: translateY(0) scale(1);
+  opacity:1;
+  pointer-events:auto;
 }
 
-/* ✅ Preview Popup Modal */
-.preview-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-  animation: fadeIn .3s ease-in-out;
+/* header */
+.chat-header{
+  padding:12px 14px;
+  background: #fff;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #f1f3f8;
+}
+.chat-title strong{display:block}
+.chat-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* body */
+.chat-body{
+  padding:12px;
+  max-height:310px;
+  overflow:auto;
+  background:linear-gradient(180deg,#fbfcff,#fff);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 
-/* ✅ Popup Card */
-.preview-content {
-  background: white;
-  padding: 25px;
-  max-width: 550px;
-  width: 92%;
-  border-radius: 12px;
-  text-align: center;
-  animation: zoomIn .25s ease-in-out;
-  box-shadow: 0 12px 40px rgba(0,0,0,.25);
-  position: relative;
+/* messages */
+.msg{
+  padding:10px 12px;
+  border-radius:12px;
+  max-width:78%;
+  font-size:14px;
+  line-height:1.35;
+}
+.bot-msg{
+  background:#f1f5ff;
+  color:#0b1220;
+  align-self:flex-start;
+  border-bottom-left-radius:6px;
+}
+.user-msg{
+  background:#e8fdf6;
+  color:#023e2a;
+  align-self:flex-end;
+  border-bottom-right-radius:6px;
 }
 
-/* ✅ Close Icon */
-.close-preview {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 30px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #333;
+/* typing indicator (slightly muted) */
+.typing{opacity:.85;font-style:italic;color:var(--muted)}
+
+/* footer (input) */
+.chat-footer{
+  display:flex;
+  gap:8px;
+  padding:10px;
+  border-top:1px solid #f1f3f8;
+  background:white;
 }
-.close-preview:hover {
-  color: #d60000;
+.chat-footer input{
+  flex:1;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #e6e9f2;
+  outline:none;
+  font-size:14px;
+}
+.chat-send{
+  background: linear-gradient(90deg,var(--primary-1),var(--primary-2));
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
 }
 
-/* ✅ Animations */
-@keyframes zoomIn {
-  from { transform: scale(.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* responsive */
+@media (max-width:480px){
+  .chat-popup{right:12px; left:12px; width:auto; bottom:80px}
+  .chat-toggle{right:12px; bottom:16px}
+  .hero-right{display:none}
 }

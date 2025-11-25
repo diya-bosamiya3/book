@@ -1,5 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
+from decimal import Decimal
+
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -20,7 +24,13 @@ class Order(models.Model):
         return f"Order #{self.id} - {self.book.title} by {self.buyer.username}"
     
 class Book(models.Model):
-    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='books_uploaded', null=True, blank=True)
+    seller = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='books_uploaded',
+        null=True,
+        blank=True
+    )
 
     name = models.CharField(max_length=100)
     email = models.EmailField()
@@ -32,8 +42,31 @@ class Book(models.Model):
     book_photo = models.ImageField(upload_to='book_photos/', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
+    quantity = models.IntegerField(default=1)
+    is_sold = models.BooleanField(default=False)
+    out_of_stock_time = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return self.book_title
+
+    def check_auto_hide(self):
+        """
+        Auto-hide books after being out-of-stock for 1 hour.
+        """
+
+        # Step 1 — If quantity becomes 0 for the first time → set time stamp
+        if self.quantity == 0 and self.out_of_stock_time is None:
+            self.out_of_stock_time = timezone.now()
+            self.save()
+
+        # Step 2 — After 1 hour, permanently mark as sold
+        if self.out_of_stock_time:
+            one_hour_later = self.out_of_stock_time + timedelta(hours=1)
+            if timezone.now() >= one_hour_later:
+                self.is_sold = True
+                self.quantity = 0
+                self.save()
+
 
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists')
@@ -54,16 +87,20 @@ class Cart(models.Model):
 
     def total_price(self):
         return sum(item.book.price for item in self.items.all())
-
-
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    cart = models.ForeignKey("Cart", related_name="items", on_delete=models.CASCADE)
+    book = models.ForeignKey("Book", on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
 
-    def __str__(self):
-        return f"{self.book.book_title} in {self.cart.user.username}'s cart"
+    @property
+    def price_with_profit(self):
+        # Convert 1.3 to Decimal to avoid TypeError
+        return self.book.price * Decimal("1.3")
 
-
+    @property
+    def total_price(self):
+        return self.price_with_profit * self.quantity
+    
 class Nuser(models.Model):
     username = models.CharField(max_length=126)
     email = models.EmailField()
@@ -104,7 +141,7 @@ class Payment(models.Model):
     PAYMENT_METHODS = [
         ('credit', 'Credit Card'),
         ('upi', 'UPI'),
-        ('cash', 'Cash'),
+        # Removed 'cash'
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -118,6 +155,11 @@ class Payment(models.Model):
     upi_id = models.CharField(max_length=100, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     contact = models.CharField(max_length=15, blank=True, null=True)
+
+    # New fields
+    delivery_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    platform_fees = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def __str__(self):
         return f"{self.name} paid via {self.payment_method}"
@@ -155,3 +197,8 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}"
+
+class OrderedBook(models.Model):
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)  # Add this field

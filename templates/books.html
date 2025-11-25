@@ -4,66 +4,47 @@
 {% block title %}Book Haven — Discover Your Next Read{% endblock %}
 
 {% block extra_css %}
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'book_app/dashboard.css' %}">
+
 <style>
-/* Blur effect when modal open */
-.blur-bg {
-  filter: blur(6px);
-  pointer-events: none;
-}
+/* Blur background when modal open */
+.blur-bg { filter: blur(6px); pointer-events: none; }
 
+/* Modal */
 .preview-modal {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); display: flex; justify-content: center;
+  align-items: center; z-index: 2000;
 }
-
 .preview-content {
-  background: #fff;
-  padding: 25px;
-  width: 500px;
-  border-radius: 12px;
-  animation: zoomIn .3s ease;
-  text-align: center;
-  position: relative;
+  background: #fff; padding: 25px; width: 500px; border-radius: 12px;
+  animation: zoomIn .3s ease; text-align: center; position: relative;
 }
+.close-preview { font-size: 28px; position: absolute; right: 15px; top: 5px; cursor: pointer; }
+@keyframes zoomIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-.close-preview {
-  font-size: 28px;
-  position: absolute;
-  right: 15px;
-  top: 5px;
-  cursor: pointer;
-}
+/* Book Cards */
+.book-card { transition: 0.3s ease; border-radius: 10px; overflow: hidden; }
+.book-card:hover { transform: translateY(-5px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
 
-@keyframes zoomIn {
-  from { transform: scale(0.7); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
+/* Stock text */
+.stock-text { font-weight: bold; }
 
-.book-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 10px;
-  overflow: hidden;
-}
+/* Hero section */
+.hero-section { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{% static "book_app/hero_bg.jpg" %}') no-repeat center/cover; min-height: 60vh; position: relative; }
+.overlay { position: absolute; top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4); }
 
-.book-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
+.search-box input { border-radius: 50px; }
+.search-box button { border-radius: 50px; }
 </style>
+
 {% endblock %}
 
 {% block body %}
 
-<!-- Hero Section -->
 <section class="hero-section text-center text-white d-flex align-items-center justify-content-center">
   <div class="overlay"></div>
   <div class="container position-relative">
@@ -72,82 +53,120 @@
     </h1>
     <p class="lead mb-4">Buy • Sell • Explore — A paradise for book lovers 📚</p>
 
-    <form method="get" id="searchForm" class="search-box d-flex justify-content-center position-relative" style="width:60%;margin:auto;">
-      <input type="text" id="searchInput" name="search" class="form-control search-input"
-        placeholder="🔍 Search by title or author..." value="{{ search|default:'' }}"
-        onkeyup="fetchSuggestions(this.value)" autocomplete="off">
+```
+<!-- Search -->
+<form method="get" class="search-box d-flex justify-content-center position-relative" style="width:60%;margin:auto;">
+  <input type="text" name="search" class="form-control search-input"
+    placeholder="🔍 Search by title or author..."
+    value="{{ search|default:'' }}" autocomplete="off">
 
-      <button class="btn btn-warning search-btn ms-2">
-        <i class="bi bi-search"></i>
-      </button>
+  <button class="btn btn-warning search-btn ms-2"><i class="bi bi-search"></i></button>
+</form>
+```
 
-      <div id="suggestion-box"
-        class="bg-white border shadow position-absolute rounded mt-5 w-100"
-        style="display:none;max-height:200px;overflow-y:auto;z-index:1000;">
-      </div>
-    </form>
   </div>
 </section>
 
-<!-- Book Section -->
 <div id="bookArea">
   <div class="container py-5">
+    <!-- IN STOCK -->
     <div class="row g-4">
       {% for book in books %}
+      {% if book.quantity > 0 %}
       <div class="col-sm-6 col-md-4 col-lg-3">
         <div class="book-card shadow-lg">
 
-          <img 
-            src="{% if book.book_photo %}{{ book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" 
-            class="book-img"
-            style="cursor:pointer;width:100%;height:240px;object-fit:cover;"
-            onclick="previewBook(
-              '{{ book.book_photo.url|default_if_none:"" }}',
-              `{{ book.book_title|escapejs }}`,
-              `{{ book.author|escapejs }}`,
-              `{{ book.price }}`,
-              `{{ book.description|default:"No description available"|escapejs }}`
-            )"
-          />
+```
+      <img src="{% if book.book_photo %}{{ book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" 
+           class="book-img" style="cursor:pointer;width:100%;height:240px;object-fit:cover;"
+           onclick="previewBook(
+             '{{ book.book_photo.url|default_if_none:"" }}',
+             `{{ book.book_title|escapejs }}`,
+             `{{ book.author|escapejs }}`,
+             `{{ book.price_with_profit }}`,
+             `{{ book.description|default:"No description available"|escapejs }}`,
+             `{{ book.quantity }}`
+           )"/>
 
-          <div class="p-3">
-            <h5 class="fw-bold">{{ book.book_title|truncatechars:30 }}</h5>
-            <p class="text-muted small mb-1"><i class="bi bi-person"></i> {{ book.author }}</p>
-            <p class="price fw-semibold"><i class="bi bi-currency-rupee"></i>{{ book.price }}</p>
+      <div class="p-3">
+        <h5 class="fw-bold">{{ book.book_title|truncatechars:30 }}</h5>
+        <p class="text-muted small mb-1"><i class="bi bi-person"></i> {{ book.author }}</p>
+        <p class="price fw-semibold"><i class="bi bi-currency-rupee"></i>{{ book.price_with_profit|floatformat:2 }}</p>
+        {% if book.description %}
+        <p class="desc small text-secondary">{{ book.description|truncatechars:50 }}</p>
+        {% endif %}
+        <p class="text-success stock-text small">In Stock: {{ book.quantity }}</p>
 
-            {% if book.description %}
-            <p class="desc small text-secondary">{{ book.description|truncatechars:50 }}</p>
-            {% endif %}
+        <div class="d-flex justify-content-between mt-3">
+          <!-- Wishlist -->
+          <button class="btn btn-outline-danger btn-sm wishlist-btn" 
+            data-id="{{ book.id }}" 
+            data-in-wishlist="{% if book.id in wishlist_ids %}true{% else %}false{% endif %}">
+            <i class="bi {% if book.id in wishlist_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+          </button>
 
-            <div class="d-flex justify-content-between mt-3">
-              <button class="btn btn-outline-danger btn-sm wishlist-btn" 
-                      data-id="{{ book.id }}" 
-                      data-in-wishlist="{% if book.id in wishlist_ids %}true{% else %}false{% endif %}">
-                <i class="bi {% if book.id in wishlist_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
-              </button>
-
-              <button class="btn btn-warning btn-sm" onclick="addToCart({{ book.id }})">
-                <i class="bi bi-cart-plus"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
-        </div> <!-- book-card -->
-      </div> <!-- col -->
-      {% empty %}
-      <h4 class="text-center text-muted">No books found 😕</h4>
-      {% endfor %}
+          {% if user.is_authenticated %}
+          <form id="addCartForm{{ book.id }}" action="{% url 'add_to_cart' book.id %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="quantity" id="qtyValue{{ book.id }}">
+            <button type="button" class="btn btn-primary btn-sm"
+                    onclick="openQtyModal('{{ book.book_title }}', {{ book.id }}, {{ book.quantity }})">
+              Add to Cart
+            </button>
+          </form>
+          {% else %}
+          <button class="btn btn-primary btn-sm" onclick="showLoginBox()">Add to Cart</button>
+          {% endif %}
+        </div>
+      </div>
     </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+
+<hr class="my-5">
+
+<!-- OUT OF STOCK -->
+<h3 class="text-center text-muted mb-4">Out of Stock</h3>
+<div class="row g-4">
+  {% for book in books %}
+  {% if book.quantity <= 0 %}
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <div class="book-card shadow-lg">
+      <img src="{% if book.book_photo %}{{ book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" 
+           class="book-img" style="cursor:pointer;width:100%;height:240px;object-fit:cover;opacity:0.6;"
+           onclick="previewBook(
+             '{{ book.book_photo.url|default_if_none:"" }}',
+             `{{ book.book_title|escapejs }}`,
+             `{{ book.author|escapejs }}`,
+             `{{ book.price_with_profit }}`,
+             `{{ book.description|default:"No description available"|escapejs }}`,
+             `{{ book.quantity }}`
+           )"/>
+
+      <div class="p-3">
+        <h5 class="fw-bold">{{ book.book_title|truncatechars:30 }}</h5>
+        <p class="text-muted small mb-1"><i class="bi bi-person"></i> {{ book.author }}</p>
+        <p class="price fw-semibold"><i class="bi bi-currency-rupee"></i>{{ book.price_with_profit|floatformat:2 }}</p>
+        {% if book.description %}
+        <p class="desc small text-secondary">{{ book.description|truncatechars:50 }}</p>
+        {% endif %}
+        <p class="text-danger stock-text small">Out of Stock</p>
+        <button class="btn btn-secondary btn-sm w-100" disabled><i class="bi bi-x-circle"></i> Out of Stock</button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+```
+
   </div>
 </div>
 
-<!-- Hidden Cart Form -->
-<iframe name="hiddenFrame" style="display:none;"></iframe>
-<form id="addToCartForm" method="POST" action="" target="hiddenFrame" style="display:none;">
-  {% csrf_token %}
-</form>
+<!-- Modals -->
 
-<!-- Book Preview Modal -->
 <div id="bookPreview" class="preview-modal d-none">
   <div class="preview-content">
     <span class="close-preview">&times;</span>
@@ -156,80 +175,93 @@
     <p id="previewAuthor" class="text-muted"></p>
     <p id="previewPrice" class="fw-bold"></p>
     <p id="previewDesc" class="small"></p>
+    <p id="previewStock" class="fw-bold mt-2"></p>
   </div>
 </div>
 
-<!-- JS Section -->
-<script>
-function previewBook(img, title, author, price, description) {
-  document.getElementById("previewImg").src = img || "{% static 'book_app/default_book.png' %}";
-  document.getElementById("previewTitle").innerText = title;
-  document.getElementById("previewAuthor").innerText = "👤 " + author;
-  document.getElementById("previewPrice").innerText = "₹ " + price;
-  document.getElementById("previewDesc").innerText = description;
+<div id="loginModal" class="preview-modal d-none">
+  <div class="preview-content" style="max-width:400px;">
+    <span class="close-preview">&times;</span>
+    <h4 class="mb-3">Login Required</h4>
+    <p>You must be logged in to add books to your cart.</p>
+    <a href="/login/?next=/books_display/" class="btn btn-primary w-100 mt-3">Login Now</a>
+  </div>
+</div>
 
-  document.getElementById("bookPreview").classList.remove("d-none");
-  document.getElementById("bookArea").classList.add("blur-bg");
+<div id="qtyModal" class="preview-modal d-none">
+  <div class="preview-content" style="max-width:400px;">
+    <span class="close-preview">&times;</span>
+    <h4 class="mb-3">Select Quantity</h4>
+    <p id="qtyBookName" class="fw-bold"></p>
+    <label class="form-label">Choose quantity</label>
+    <select id="qtySelect" class="form-select mb-3"></select>
+    <button class="btn btn-primary w-100" onclick="submitQty()">Add to Cart</button>
+  </div>
+</div>
+
+<!-- Scripts -->
+
+<script>
+let currentBookId = null;
+
+// Quantity modal
+function openQtyModal(title, bookId, stock) {
+    currentBookId = bookId;
+    document.getElementById("qtyBookName").innerText = title;
+    const select = document.getElementById("qtySelect");
+    select.innerHTML = "";
+    for (let i=1;i<=stock;i++){
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = i;
+        select.appendChild(opt);
+    }
+    document.getElementById("qtyModal").classList.remove("d-none");
+    document.getElementById("bookArea").classList.add("blur-bg");
+}
+function closeQtyModal(){document.getElementById("qtyModal").classList.add("d-none");document.getElementById("bookArea").classList.remove("blur-bg");}
+function submitQty(){
+    document.getElementById("qtyValue"+currentBookId).value=document.getElementById("qtySelect").value;
+    document.getElementById("addCartForm"+currentBookId).submit();
+    closeQtyModal();
+    setTimeout(()=>location.reload(),300);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelector(".close-preview").onclick = function() {
-    document.getElementById("bookPreview").classList.add("d-none");
-    document.getElementById("bookArea").classList.remove("blur-bg");
-  };
+// Book preview
+function previewBook(img,title,author,price,desc,quantity){
+    document.getElementById("previewImg").src=img||"{% static 'book_app/default_book.png' %}";
+    document.getElementById("previewTitle").innerText=title;
+    document.getElementById("previewAuthor").innerText="👤 "+author;
+    document.getElementById("previewPrice").innerText="₹ "+parseFloat(price).toFixed(2);
+    document.getElementById("previewDesc").innerText=desc;
+    document.getElementById("previewStock").innerHTML=quantity>0?`<span class='text-success'>In Stock: ${quantity}</span>`:`<span class='text-danger'>Out of Stock</span>`;
+    document.getElementById("bookPreview").classList.remove("d-none");
+    document.getElementById("bookArea").classList.add("blur-bg");
+}
 
-  document.getElementById("bookPreview").onclick = function(e) {
-    if (e.target.id === "bookPreview") {
-      document.getElementById("bookPreview").classList.add("d-none");
-      document.getElementById("bookArea").classList.remove("blur-bg");
-    }
-  };
+// Close modals
+document.querySelectorAll(".close-preview").forEach(btn=>{
+    btn.addEventListener("click",()=>{btn.closest(".preview-modal").classList.add("d-none");document.getElementById("bookArea").classList.remove("blur-bg");});
 });
-</script>
 
-<script>
-function addToCart(bookId) {
-  fetch(`/cart/add/${bookId}/`, {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      alert("✅ Book added to cart!");
-    } else {
-      alert("❌ Failed to add to cart");
-    }
-  })
-  .catch(error => console.error("Error:", error));
-}
+// Login modal
+function showLoginBox(){document.getElementById("loginModal").classList.remove("d-none");document.getElementById("bookArea").classList.add("blur-bg");}
+function closeLoginBox(){document.getElementById("loginModal").classList.add("d-none");document.getElementById("bookArea").classList.remove("blur-bg");}
 
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll(".wishlist-btn").forEach(btn => {
-    btn.addEventListener("click", function() {
-      const bookId = this.dataset.id;
-      const icon = this.querySelector("i");
-
-      fetch(`/wishlist/toggle/${bookId}/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "added") {
-          icon.classList.remove("bi-heart");
-          icon.classList.add("bi-heart-fill", "text-danger");
-        } else if (data.status === "removed") {
-          icon.classList.remove("bi-heart-fill", "text-danger");
-          icon.classList.add("bi-heart");
-        }
-      })
-      .catch(err => console.error("Wishlist error:", err));
+// Wishlist
+document.querySelectorAll(".wishlist-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+        const bookId=btn.dataset.id;
+        fetch(`/wishlist/toggle/${bookId}/`,{
+            method:"POST",
+            headers:{"X-CSRFToken":document.querySelector('[name=csrfmiddlewaretoken]').value,"Content-Type":"application/json"},
+            body:JSON.stringify({})
+        }).then(res=>res.json()).then(data=>{
+            const icon=btn.querySelector("i");
+            if(data.status=="added"){icon.classList.remove("bi-heart");icon.classList.add("bi-heart-fill","text-danger");btn.dataset.inWishlist="true";}
+            else if(data.status=="removed"){icon.classList.remove("bi-heart-fill","text-danger");icon.classList.add("bi-heart");btn.dataset.inWishlist="false";}
+        });
     });
-  });
 });
 </script>
 

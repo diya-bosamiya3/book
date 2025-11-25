@@ -1,96 +1,170 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}
-  <title>Your Cart - Book Bazaar</title>
-{% endblock title %}
+{% block title %}Your Cart - Book Bazaar{% endblock %}
 
 {% block extra_css %}
-<style>
-  .cart-container {
-    max-width: 800px;
-    margin: 50px auto;
-  }
 
+<style>
   .cart-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 20px;
+    background: linear-gradient(135deg, #fdfbfb, #ebedee);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
 
-  .cart-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-
-  .cart-img {
-    width: 60px;
-    height: 60px;
+  .cart-item img {
+    width: 150px;
+    height: 200px;
     object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #ddd;
+    border-radius: 10px;
   }
 
-  .cart-info h5 {
-    margin: 0;
-    font-size: 1.1rem;
+  .qty-box {
+    display: flex;
+    gap: 10px;
+    align-items: center;
   }
 
-  .cart-info p {
-    margin: 0;
-    color: gray;
-    font-size: 0.9rem;
+  .qty-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: #0d6efd;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
   }
 
-  .total-price {
+  .qty-input {
+    width: 50px;
+    text-align: center;
+    font-size: 16px;
+    padding: 3px;
+  }
+
+  .subtotal {
     font-weight: bold;
     font-size: 1.1rem;
   }
+
+  .cart-total {
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-align: right;
+  }
 </style>
-{% endblock extra_css %}
+
+{% endblock %}
 
 {% block body %}
-<div class="container cart-container">
-  <h2 class="mb-4">🛒 Your Shopping Cart</h2>
 
-  {% if items %}
-    <ul class="list-group mb-4">
-      {% for item in items %}
-        <li class="list-group-item cart-item">
-          <div class="cart-left">
-            <img 
-              src="{% if item.book.book_photo %}{{ item.book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}" 
-              alt="{{ item.book.book_title }}" 
-              class="cart-img"
-            />
-            <div class="cart-info">
-              <h5>{{ item.book.book_title }}</h5>
-              <p>₹{{ item.book.price }}</p>
-            </div>
-          </div>
+<div class="container mt-5">
+  <h2 class="mb-4"><i class="bi bi-cart4"></i> Your Cart</h2>
 
-          <form method="POST" action="{% url 'remove_from_cart' item.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-outline-danger">
-              <i class="bi bi-trash"></i> Remove
-            </button>
-          </form>
-        </li>
-      {% endfor %}
-    </ul>
+{% if items %}
+{% for item in items %} <div class="cart-item" data-item-id="{{ item.id }}"> <img src="{% if item.book.book_photo %}{{ item.book.book_photo.url }}{% else %}{% static 'book_app/default_book.png' %}{% endif %}">
 
-    <div class="text-end">
-      <h5 class="total-price">Total: ₹{{ total }}</h5>
-      <a href="{% url 'checkout' %}" class="btn btn-success mt-2">
-        <i class="bi bi-cash-stack"></i> Proceed to Checkout
-      </a>
+```
+  <div class="flex-grow-1">
+    <h5>{{ item.book.book_title }}</h5>
+    <p>Author: {{ item.book.author }}</p>
+    <p>Price: ₹<span class="price">{{ item.price_with_profit|floatformat:2 }}</span></p>
+
+    <div class="qty-box">
+      <button class="qty-btn minus">-</button>
+      <input type="text" class="qty-input" value="{{ item.quantity }}" data-stock="{{ item.book.quantity }}">
+      <button class="qty-btn plus">+</button>
     </div>
-  {% else %}
-    <div class="alert alert-info text-center">
-      🛍️ Your cart is empty. 
-      <a href="{% url 'book' %}" class="alert-link">Browse books</a> to add some!
-    </div>
-  {% endif %}
+
+    <p class="subtotal mt-2">
+      Subtotal: ₹<span class="subtotal-val">{{ item.total_price|floatformat:2 }}</span>
+    </p>
+  </div>
+
+  <div>
+    <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-danger btn-sm">
+      Remove
+    </a>
+  </div>
 </div>
-{% endblock body %}
+{% endfor %}
+
+<div class="cart-total mt-3">
+  Total: ₹<span id="grandTotal">0</span>
+</div>
+
+<a href="{% url 'checkout' %}" class="btn btn-success float-end mt-3">
+  Proceed to Checkout
+</a>
+```
+
+{% else %} <p>Your cart is empty.</p>
+{% endif %}
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function updateTotal() {
+    let total = 0;
+    document.querySelectorAll(".subtotal-val").forEach(sub => {
+      total += parseFloat(sub.innerText);
+    });
+    document.getElementById("grandTotal").innerText = total.toFixed(2);
+  }
+
+  document.querySelectorAll(".cart-item").forEach(cartItem => {
+    const minusBtn = cartItem.querySelector(".minus");
+    const plusBtn = cartItem.querySelector(".plus");
+    const qtyInput = cartItem.querySelector(".qty-input");
+    const price = parseFloat(cartItem.querySelector(".price").innerText);
+    const subtotalVal = cartItem.querySelector(".subtotal-val");
+    const maxStock = parseInt(qtyInput.dataset.stock);
+    const itemId = cartItem.dataset.itemId;
+
+    function updateSubtotalServer(qty) {
+      fetch("{% url 'update_cart_quantity' 0 %}".replace('0', itemId), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ quantity: qty })
+      });
+    }
+
+    function updateSubtotal() {
+      let qty = parseInt(qtyInput.value);
+      if (isNaN(qty) || qty < 1) qty = 1;
+      if (qty > maxStock) qty = maxStock;
+      qtyInput.value = qty;
+      subtotalVal.innerText = (price * qty).toFixed(2);
+      updateSubtotalServer(qty);
+      updateTotal();
+    }
+
+    minusBtn.addEventListener("click", function () {
+      qtyInput.value = parseInt(qtyInput.value) - 1;
+      updateSubtotal();
+    });
+
+    plusBtn.addEventListener("click", function () {
+      qtyInput.value = parseInt(qtyInput.value) + 1;
+      updateSubtotal();
+    });
+
+    qtyInput.addEventListener("keyup", function (e) {
+      if (e.key === "Enter") updateSubtotal();
+    });
+  });
+
+  updateTotal();
+});
+</script>
+
+{% endblock %}

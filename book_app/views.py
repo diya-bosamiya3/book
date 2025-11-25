@@ -1,526 +1,794 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.contrib.auth.models import User
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
-from django.utils.timezone import now
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from django.conf import settings
-from django.template.loader import get_template
-from django.views.decorators.http import require_POST
-from django.shortcuts import render, redirect
-from django.core.mail import send_mail
-from datetime import datetime
-from xhtml2pdf import pisa
-import requests
-from book_app.models import *
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from openai import OpenAI
-from django.db.models import Q
-from .models import Notification
-
-#client = OpenAI(api_key=settings.OPENAI_API_KEY)
+from django.contrib.auth.models import User
+from django.utils import timezone
+from django.db.models import Q, Case, When, IntegerField
+from django.db import transaction
+from datetime import timedelta
 import google.generativeai as genai
-import os
-
-# Configure Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-@csrf_exempt
-def ai_book_recommend(request):
-    if request.method == "POST":
-        user_message = request.POST.get("message", "").strip()
-
-        if not user_message:
-            return JsonResponse({
-                "reply": "Please type something like: Suggest books similar to 'Atomic Habits'."
-            })
-
-        # 1️⃣ Try to find matching books from your database
-        matching_books = Book.objects.filter(book_title__icontains=user_message)[:5]
-
-        if matching_books.exists():
-            book_list = "\n".join([
-                f"📘 {b.book_title} — ₹{b.price}" for b in matching_books
-            ])
-            bot_reply = f"I found these books related to your interest:\n\n{book_list}"
-
-        else:
-            # 2️⃣ Ask Gemini if no local match found (short replies)
-            model = genai.GenerativeModel("gemini-2.5-flash")
-
-            prompt = (
-                f"You are BookBot, a friendly book recommender.\n"
-                f"User asked: '{user_message}'\n"
-                f"Reply briefly in under 4 lines.\n"
-                f"Suggest only 3 books with title and author (no descriptions)."
-            )
-
-            response = model.generate_content(prompt)
-            bot_reply = response.text.strip()
-
-        return JsonResponse({"reply": bot_reply})
-
-    return JsonResponse({"error": "Invalid request method."}, status=400)
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import*
+from django.db.models import F, FloatField, ExpressionWrapper
+from django.views.decorators.csrf import csrf_exempt
+import json
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
 
 @login_required
-def profile_view(request):
-    user = request.user
-    profile, created = Profile.objects.get_or_create(user=user)
-
-    # ✅ Profile photo upload
-    if request.method == "POST" and request.FILES.get("profile"):
-        profile.profile = request.FILES["profile"]
-        profile.save()
-        return redirect("profile")
-
-    # ✅ Orders placed by this user
-    orders = Order.objects.filter(buyer=user).select_related("book")
-
-    # ✅ Books uploaded/sold by this user (email used as seller identifier)
-    selling_books = Book.objects.filter(email=user.email)
-
-    # ✅ All orders for books uploaded by this user
-    sold_orders = (
-        Order.objects.filter(book__email=user.email)
-        .select_related("book", "buyer")
-        .order_by("-order_date")  # 👈 fixed here
-    )
-
-    # ✅ Wishlist
-    wishlist = Wishlist.objects.filter(user=user).select_related("book")
-
-    # ✅ Cart
-    cart = Cart.objects.filter(user=user).first()
-    cart_items = cart.items.select_related("book") if cart else []
-
-    # ✅ Reviews
-    reviews = Review.objects.filter(user=user)
-
-    # ✅ Login History
-    login_history = LoginActivity.objects.filter(user=user).order_by("-login_time")
-
-    # ✅ Payments
-    payments = Payment.objects.filter(user=user)
-
-    return render(request, "profile.html", {
-        "user": user,
-        "profile": profile,
-        "orders": orders,
-        "selling_books": selling_books,
-        "wishlist": wishlist,
-        "cart_items": cart_items,
-        "reviews": reviews,
-        "login_history": login_history,
-        "payments": payments,
-        "sold_orders": sold_orders,  # ✅ now fixed and works perfectly
-    })
-
-
-"""""
-@csrf_exempt
 def ai_book_recommend(request):
-    if request.method == "POST":
-        user_message = request.POST.get("message", "").strip()
+    query = request.GET.get("q", "")
 
-        if not user_message:
-            return JsonResponse({"reply": "Please type something like: Suggest books similar to 'Atomic Habits'."})
+    if not query:
+        return JsonResponse({"error": "No query provided"}, status=400)
 
-        # 1️⃣ Try finding books in your own database
-        matching_books = Book.objects.filter(book_title__icontains=user_message)[:5]
-        if matching_books.exists():
-            book_list = "\n".join([f"📘 {b.book_title} — ₹{b.price}" for b in matching_books])
-            bot_reply = f"I found these books from our collection:\n\n{book_list}"
-        else:
-            # 2️⃣ Use GPT to recommend globally
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4.1-mini",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "You are a friendly and knowledgeable book recommender. Suggest 5 books with title, author, and short reason."
-                        },
-                        {
-                            "role": "user",
-                            "content": f"Suggest 5 books similar to: {user_message}."
-                        }
-                    ]
-                )
-                bot_reply = response.choices[0].message.content
-            except Exception as e:
-                bot_reply = f"⚠️ Error: {e}"
+    try:
+        model = genai.GenerativeModel("gemini-pro")
 
-        return JsonResponse({"reply": bot_reply})
+        response = model.generate_content(
+            f"Suggest books for: {query}. Give short, clear suggestions only."
+        )
 
-    return JsonResponse({"error": "Invalid request method."}, status=400)"""""
+        return JsonResponse({
+            "recommendation": response.text
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+# ============================
+#  🔥 UNIVERSAL HELPER UTILS
+# ============================
+
+def run_auto_hide_cleanup():
+    """Auto-hide books that stayed out of stock for 1 hour."""
+    cutoff = timezone.now() - timedelta(hours=1)
+    Book.objects.filter(out_of_stock_time__lte=cutoff, is_sold=False).update(is_sold=True)
+
+
+def is_book_visible(book):
+    """Check whether book should be shown before it fully disappears after 1 hour."""
+    if book.quantity > 0:
+        return True
+    
+    if book.quantity == 0 and book.out_of_stock_time:
+        return timezone.now() <= book.out_of_stock_time + timedelta(hours=1)
+
+    return False
+
+
+def get_wishlist_ids(user):
+    return list(Wishlist.objects.filter(user=user).values_list("book_id", flat=True))
+
+
+
 
 def login(request):
     if request.method == "POST":
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
 
         user = authenticate(request, username=username, password=password)
         if user:
             auth_login(request, user)
-            activity = LoginActivity.objects.create(user=user)
-            request.session['login_activity_id'] = activity.id
-            return redirect('dashboard')
-        else:
-            messages.error(request, "Invalid credentials")
-            return redirect('login')
+            activity = LoginActivity.objects.create(user=user, username=user.username, email=user.email)
+            request.session["login_activity_id"] = activity.id
+            return redirect("dashboard")
+        messages.error(request, "Invalid username or password.")
+    return render(request, "login.html")
 
-    return render(request, 'login.html')
+def newacc(request):
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+        confirm_password = request.POST.get("confirm_password", "")
 
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email is already registered.")
+            return redirect("newacc")
 
-def logout_page(request):
-    activity_id = request.session.get('login_activity_id')
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username is already taken.")
+            return redirect("newacc")
+
+        # Check password confirm
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect("newacc")
+
+        # Create new user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        messages.success(request, "Account created successfully! Please log in.")
+        return redirect("login")
+
+    return render(request, "newacc.html")
+
+def logout(request):
+    activity_id = request.session.get("login_activity_id")
     if activity_id:
         try:
             activity = LoginActivity.objects.get(id=activity_id, user=request.user)
-            activity.logout_time = now()
+            activity.logout_time = timezone.now()
             activity.save()
-        except LoginActivity.DoesNotExist:
+        except:
             pass
 
     auth_logout(request)
     request.session.flush()
-    return redirect('/')
+    return redirect("dashboard")
 
+@login_required
+def profile_view(request):
+    user = request.user
+    profile, _ = Profile.objects.get_or_create(user=user)  # ensure profile object
 
-def newacc(request):
+    selling_books = Book.objects.filter(seller=user, is_sold=False)
+    sold_books = Book.objects.filter(seller=user, is_sold=True)
+    wishlist_items = Wishlist.objects.filter(user=user).select_related("book")
+
+    context = {
+        "user": user,
+        "profile": profile,  # add this
+        "selling_books": selling_books,
+        "sold_books": sold_books,
+        "wishlist_items": wishlist_items,
+    }
+    return render(request, "profile.html", context)
+@login_required
+def edit_profile(request):
+    user = request.user
+    profile = Profile.objects.get(user=user)
+
     if request.method == "POST":
         username = request.POST.get("username")
         email = request.POST.get("email")
+        profile_pic = request.FILES.get("profile")
+
+        user.username = username
+        user.email = email
+        user.save()
+
+        if profile_pic:
+            profile.profile = profile_pic
+            profile.save()
+
+        messages.success(request, "Profile updated successfully!")
+        return redirect("profile_view")
+
+    return render(request, "edit_profile.html", {"user": user, "profile": profile})
+
+# =======================
+#  PROFILE
+# =======================
+def profile(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    selling_books = Book.objects.filter(seller=request.user, is_sold=False)
+
+    # Orders received
+    orders_received = OrderedBook.objects.filter(
+        book__seller=request.user
+    ).select_related("book", "payment", "payment__user")
+
+    # --- CART COUNT ---
+    try:
+        cart = Cart.objects.get(user=request.user)
+        cart_items = CartItem.objects.filter(cart=cart)
+        cart_count = cart_items.count()
+    except Cart.DoesNotExist:
+        cart_items = []
+        cart_count = 0
+
+    # --- WISHLIST COUNT ---
+    wishlist_items = Wishlist.objects.filter(user=request.user)
+    wishlist_count = wishlist_items.count()
+
+    context = {
+        "profile": profile,
+        "selling_books": selling_books,
+        "sold_orders": orders_received,
+        "orders": Order.objects.filter(buyer=request.user),
+
+        # ⭐ VERY IMPORTANT
+        "cart_items": cart_items,
+        "cart_count": cart_count,
+
+        "wishlist": wishlist_items,
+        "wishlist_count": wishlist_count,
+
+        "reviews": Review.objects.filter(user=request.user),
+    }
+
+    return render(request, "profile.html", context)
+
+
+
+@login_required
+def edit_book(request, book_id):
+    # ensures only owner can edit
+    book = get_object_or_404(Book, id=book_id, seller=request.user)
+
+    if request.method == "POST":
+        # get values
+        title = request.POST.get("book_title", "").strip()
+        author = request.POST.get("author", "").strip()
+        price_raw = request.POST.get("price", "").strip()
+        qty_raw = request.POST.get("quantity", "0").strip()
+
+        # basic validation / casting
+        try:
+            price = float(price_raw) if price_raw != "" else book.price
+        except ValueError:
+            messages.error(request, "Invalid price value.")
+            return redirect("edit_book", book_id=book_id)
+
+        try:
+            quantity = int(qty_raw)
+            if quantity < 0:
+                raise ValueError
+        except ValueError:
+            messages.error(request, "Quantity must be a non-negative integer.")
+            return redirect("edit_book", book_id=book_id)
+
+        # assign
+        book.book_title = title or book.book_title
+        book.author = author or book.author
+        book.price = price
+        book.quantity = quantity
+
+        if request.FILES.get("book_photo"):
+            book.book_photo = request.FILES["book_photo"]
+
+        book.save()
+        messages.success(request, "Book updated successfully.")
+        return redirect("profile")  # use your named profile url
+
+    return render(request, "edit_book.html", {"book": book})
+
+@login_required
+def delete_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id, seller=request.user)
+    book.delete()
+    return redirect("profile_view")
+
+
+def register(request):
+    if request.method == "POST":
+        username = request.POST.get("username").strip()
+        email    = request.POST.get("email").strip()
         password = request.POST.get("password")
-        confirm = request.POST.get("confirm_password")
+        confirm  = request.POST.get("confirm_password")
 
         if password != confirm:
             messages.error(request, "Passwords do not match.")
-            return redirect('newacc')
+            return redirect("register")
 
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists.")
-            return redirect('newacc')
+            return redirect("register")
 
         User.objects.create_user(username=username, email=email, password=password)
-        return redirect('login')
+        messages.success(request, "Account created successfully! Please login.")
+        return redirect("login")
 
-    return render(request, 'newacc.html')
+    return render(request, "register.html")
 
-@login_required
+
+# =======================
+#  DASHBOARD + BOOK DISPLAY
+# =======================
+
 def dashboard(request):
-    books = Book.objects.all()
-    reviews = Review.objects.all().order_by('-created_at')[:5]
+    run_auto_hide_cleanup()
 
-    # Get or create cart and count items
-    cart, _ = Cart.objects.get_or_create(user=request.user)
-    cart_count = cart.items.count()
+    # All available books for homepage sections
+    books = Book.objects.filter(is_sold=False).order_by("-id")
 
-    return render(request, 'dashboard.html', {
-        'books': books,
-        'cart_count': cart_count,
-        'reviews': reviews
-    })
+    # 🔥 Top 5 Trending Books (recently added)
+    top_books = Book.objects.filter(is_sold=False).order_by("-id")[:5]
 
-@login_required
-def submit_review(request):
-    if request.method == 'POST':
-        rating = int(request.POST['rating'])
-        comment = request.POST['comment']
-        Review.objects.create(user=request.user, rating=rating, comment=comment)
-        messages.success(request, 'Thanks for your review!')
-        return redirect('dashboard')  # This will show it on the dashboard
+    # 🌟 Latest Reviews
+    reviews = Review.objects.all().order_by("-created_at")[:6]
 
-    # If someone visits the page directly
-    return render(request, 'reviews.html', {
-        'reviews': Review.objects.order_by('-created_at')
-    })
+    context = {
+        "books": books,
+        "top_books": top_books,
+        "reviews": reviews,
+    }
 
-def review_page(request):
-    return render(request,'reviews.html')
+    # 🛒 If user logged in → cart, wishlist, notifications
+    if request.user.is_authenticated:
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        context["cart_count"] = cart.items.count()
+        context["wishlist_ids"] = get_wishlist_ids(request.user)
 
-
-@login_required
-def base(request):
-    userinfo = LoginActivity.objects.filter(user=request.user).order_by('-id').first()
-    profile,created=Profile.objects.get_or_create(user=request.user)
-    return render(request, 'base.html', {'userinfo': userinfo, 'profile':profile})
-
-
-def services(request):
-    return render(request, 'services.html')
-
-
-@login_required
-def selling(request):
-    if request.method == "POST":
-        book = Book(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            phone=request.POST.get('phone'),
-            book_title=request.POST.get('title'),
-            author=request.POST.get('author'),
-            condition=request.POST.get('condition'),
-            price=request.POST.get('price'),
-            book_photo=request.FILES.get('photo'),
-            description=request.POST.get('description')
+        context["unread_notifications"] = (
+            request.user.notifications.filter(is_read=False).count()
         )
-        book.save()
-        return redirect('book')
-    return render(request, 'selling.html')
+    else:
+        # Required to prevent crash for anonymous users
+        context["unread_notifications"] = 0
+
+    return render(request, "dashboard.html", context)
 
 
-@login_required
-def book_display(request):
-    books = Book.objects.all().order_by('-id')
-    search = request.GET.get('search')
-    
+def book(request):
+    run_auto_hide_cleanup()
+
+    search = request.GET.get("search", "").strip()
+    one_hour_ago = timezone.now() - timedelta(hours=1)
+
+    qs = Book.objects.filter(
+        Q(quantity__gt=0) |
+        Q(quantity=0, out_of_stock_time__gte=one_hour_ago),
+        is_sold=False
+    )
+
     if search:
-        books = books.filter(
+        qs = qs.filter(
             Q(book_title__icontains=search) |
             Q(author__icontains=search)
         )
 
-    # Suggestions (max 5)
-    suggestions = Book.objects.filter(book_title__icontains=search)[:5] if search else []
-    
-    cart, _ = Cart.objects.get_or_create(user=request.user)
-    cart_count = cart.items.count()
-
-    return render(request, 'books.html', {
-        'books': books,
-        'cart_count': cart_count,
-        'suggestions': suggestions,  # ✅ fixed comma
-        'search': search,  # ✅ send entered search text back
-    })
-from django.http import JsonResponse
-
-@login_required
-def search_suggest(request):
-    term = request.GET.get("term", "")
-    results = []
-
-    if term:
-        books = Book.objects.filter(book_title__icontains=term).values_list('book_title', flat=True)[:5]
-        results = list(books)
-
-    return JsonResponse(results, safe=False)
-
-
-@login_required
-def contact(request):
-    if request.method == "POST":
-        Contact.objects.create(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            phone=request.POST.get('phone'),
-            message=request.POST.get('message'),
-            date=datetime.today()
+    # Annotate queryset with in-stock ordering
+    qs = qs.annotate(
+        in_stock_order=Case(
+            When(quantity__gt=0, then=1),
+            default=0,
+            output_field=IntegerField()
+        ),
+        # Annotate a new field for price including 30% profit
+        price_with_profit=ExpressionWrapper(
+            F('price') * 1.3,
+            output_field=FloatField()
         )
-        messages.success(request, "Your message has been sent.")
-    return render(request, 'contact.html')
+    ).order_by("-in_stock_order", "-id")
 
+    # ----- USER INFO ONLY IF LOGGED IN -----
+    cart_count = 0
+    wishlist_ids = []
+
+    if request.user.is_authenticated:
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        cart_count = cart.items.count()
+        wishlist_ids = get_wishlist_ids(request.user)
+
+    return render(request, "books.html", {
+        "books": qs,
+        "search": search,
+        "cart_count": cart_count,
+        "wishlist_ids": wishlist_ids,
+    })
+# =======================
+#  SELLING
+# =======================
 
 @login_required
-def add_to_cart(request, book_id):
+def selling(request):
     if request.method == "POST":
-        book = get_object_or_404(Book, id=book_id)
-        cart, _ = Cart.objects.get_or_create(user=request.user)
+        Book.objects.create(
+            seller=request.user,
+            name=request.POST.get("name"),
+            email=request.POST.get("email"),
+            phone=request.POST.get("phone"),
+            book_title=request.POST.get("title"),
+            author=request.POST.get("author"),
+            condition=request.POST.get("condition"),
+            price=request.POST.get("price"),
+            book_photo=request.FILES.get("photo"),
+            description=request.POST.get("description"),
+            quantity=int(request.POST.get("quantity") or 1)
+        )
+        return redirect("profile")
 
-        if not CartItem.objects.filter(cart=cart, book=book).exists():
-            CartItem.objects.create(cart=cart, book=book)
+    return render(request, "selling.html")
 
-        return HttpResponse(status=204)
-    return HttpResponse(status=405)
+@login_required
+@csrf_exempt
+def update_cart_quantity(request, item_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        qty = max(1, int(data.get("quantity", 1)))
+        item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+        if qty > item.book.quantity:
+            qty = item.book.quantity
+        item.quantity = qty
+        item.save()
+        return JsonResponse({"status": "ok", "quantity": qty})
+    return JsonResponse({"error": "invalid request"}, status=400)
+# =======================
+#  CART
+# =======================
+def add_to_cart(request, book_id):
+    if request.method != "POST":
+        return HttpResponse(status=405)
 
+    run_auto_hide_cleanup()
+    book = get_object_or_404(Book, id=book_id)
+
+    if not is_book_visible(book):
+        return JsonResponse({"error": "out_of_stock"}, status=400)
+
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+
+    quantity = int(request.POST.get("quantity", 1))
+
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
+
+    if created:
+        # First time adding this book
+        cart_item.quantity = quantity
+    else:
+        # Already exists → increase quantity
+        cart_item.quantity += quantity
+
+    cart_item.save()
+
+    return redirect("book")
+
+
+def cart_count(request):
+    if request.user.is_authenticated:
+        count = CartItem.objects.filter(cart__user=request.user).count()
+    else:
+        count = 0
+    return {"cart_count": count}
+
+
+def wishlist_count(request):
+    if request.user.is_authenticated:
+        count = Wishlist.objects.filter(user=request.user).count()
+    else:
+        count = 0
+    return {"wishlist_count": count}
 
 @login_required
 def view_cart(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    items = cart.items.select_related('book')
-    total = sum(item.book.price for item in items)
-    return render(request, "cart.html", {"items": items, "total": total})
+    items = cart.items.select_related("book")
+
+    total = sum(item.total_price for item in items)  # uses property with profit
+
+    return render(
+        request,
+        "cart.html",
+        {
+            "items": items,
+            "total": total,
+            "cart_count": items.count(),
+        }
+    )
+
+
+@login_required
+def remove_from_cart(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    item.delete()
+    return redirect("view_cart")
+
+
+# =======================
+#  CHECKOUT
+# =======================
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+
+from .models import Cart, CartItem, Book, Payment, OrderedBook, Notification
 
 
 @login_required
 def checkout(request):
-    cart = Cart.objects.get(user=request.user)
-    items = CartItem.objects.filter(cart=cart)
-    total = sum(item.book.price for item in items)
+    run_auto_hide_cleanup()
+    cart = get_object_or_404(Cart, user=request.user)
+    items = cart.items.select_related("book")
+
+    total = sum(item.total_price for item in items)
+
+    DELIVERY_CHARGES = 60
+    PLATFORM_FEES = 20
+    total_with_fees = total + DELIVERY_CHARGES + PLATFORM_FEES
 
     if request.method == "POST":
-        name = request.user.username
-        payment_method = request.POST.get('payment_method')
-        card_num = request.POST.get('card_num')
-        upi_id = request.POST.get('upi_id')
-        address = request.POST.get('address')
-        contact = request.POST.get('contact')
-
-        if not name:
+        unavailable = [i.book.book_title for i in items if not is_book_visible(i.book)]
+        if unavailable:
             return render(request, "checkout.html", {
                 "items": items,
-                "total": total,
-                "error": "Name is required.",
+                "total": total_with_fees,
+                "delivery_charges": DELIVERY_CHARGES,
+                "platform_fees": PLATFORM_FEES,
+                "error": "Unavailable: " + ", ".join(unavailable)
             })
 
-        # ✅ Create Payment record
-        payment = Payment.objects.create(
-            user=request.user,
-            name=name,
-            payment_method=payment_method,
-            card_num=card_num if card_num else None,
-            upi_id=upi_id if upi_id else None,
-            address=address,
-            contact=contact
-        )
-
-        # ✅ Create OrderedBook entries + Notify seller
-        for item in items:
-            OrderedBook.objects.create(payment=payment, book=item.book)
-
-            # Mark book as sold
-            item.book.save()
-
-            # 🔔 Notify the seller
-            Notification.objects.create(
-                user=item.book.seller,
-                message=f"{request.user.username} has ordered your book '{item.book.book_title}'."
+        with transaction.atomic():
+            payment = Payment.objects.create(
+                user=request.user,
+                name=request.user.username,
+                payment_method=request.POST.get("payment_method"),
+                card_num=request.POST.get("card_num") or None,
+                upi_id=request.POST.get("upi_id") or None,
+                address=request.POST.get("address"),
+                contact=request.POST.get("contact"),
+                delivery_charges=DELIVERY_CHARGES,
+                platform_fees=PLATFORM_FEES,
+                total_amount=total_with_fees
             )
 
-        # ✅ Clear the cart
-        items.delete()
+            for item in items:
+                book = Book.objects.select_for_update().get(id=item.book.id)
+                OrderedBook.objects.create(payment=payment, book=book, quantity=item.quantity)
 
-        # 🔔 Notify buyer
-        Notification.objects.create(
-            user=request.user,
-            message=f"Your payment (ID: {payment.id}) was successful! Your ordered books are on the way."
-        )
+                book.quantity -= item.quantity
+                if book.quantity <= 0:
+                    book.quantity = 0
+                    if not book.out_of_stock_time:
+                        book.out_of_stock_time = timezone.now()
+                    book.is_sold = True
+                book.save()
+
+                if book.seller:
+                    Notification.objects.create(
+                        user=book.seller,
+                        message=f"{request.user.username} ordered your book '{book.book_title}'"
+                    )
+
+            items.delete()
 
         return redirect("success", payment_id=payment.id)
-        
 
-    return render(request, "checkout.html", {"items": items, "total": total})
+    return render(request, "checkout.html", {
+        "items": items,
+        "total": total_with_fees,
+        "delivery_charges": DELIVERY_CHARGES,
+        "platform_fees": PLATFORM_FEES
+    })
+
+@login_required
+def success(request, payment_id):
+    payment = get_object_or_404(Payment, id=payment_id, user=request.user)
+    ordered_books = OrderedBook.objects.select_related("book").filter(payment=payment)
+
+    # Prepare book details including image
+    books_total = Decimal(0)
+    book_details = []
+
+    for item in ordered_books:
+        price_per_book = item.book.price * Decimal('1.3')  # if you want to include profit
+        total_for_item = price_per_book * item.quantity
+        books_total += total_for_item
+
+        # Add photo URL or default
+        photo_url = item.book.book_photo.url if item.book.book_photo else '/static/book_app/default-book.png'
+
+        book_details.append({
+            "title": item.book.book_title,
+            "author": item.book.author,
+            "quantity": item.quantity,
+            "price_per_book": price_per_book,
+            "total_for_item": total_for_item,
+            "photo_url": photo_url
+        })
+
+    delivery_charges = payment.delivery_charges or 0
+    platform_fees = payment.platform_fees or 0
+    grand_total = books_total + Decimal(delivery_charges) + Decimal(platform_fees)
+
+    context = {
+        "payment": payment,
+        "ordered_books": book_details,
+        "books_total": books_total,
+        "delivery_charges": delivery_charges,
+        "platform_fees": platform_fees,
+        "grand_total": grand_total,
+    }
+
+    return render(request, "success.html", context)
+
+
+# ===========================
+#  AUTH EXTRA VIEWS
+# ===========================
+
+def logout_page(request):
+    return logout(request)   # reuse existing logout()
+
+
+# ===========================
+#  BOOK DISPLAY
+# ===========================
+
+
+
+
+# ===========================
+#  PAYMENT + RECEIPT
+# ===========================
+@login_required
+def toggle_wishlist(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    exists = Wishlist.objects.filter(user=request.user, book=book)
+
+    if exists:
+        exists.delete()
+        return JsonResponse({"status": "removed"})
+    else:
+        Wishlist.objects.create(user=request.user, book=book)
+        return JsonResponse({"status": "added"})
+
+
+@login_required
+def wishlist_view(request):
+    wishlist_items = Wishlist.objects.filter(user=request.user)
+    return render(request, "wishlist.html", {"wishlist_items": wishlist_items})
+
+
+@login_required
+def add_to_wishlist(request, book_id):
+    Wishlist.objects.get_or_create(user=request.user, book_id=book_id)
+    return redirect("wishlist_view")
+
+
+@login_required
+def remove_from_wishlist(request, book_id):
+    Wishlist.objects.filter(user=request.user, book_id=book_id).delete()
+    return redirect("wishlist_view")
+
 
 @login_required
 def my_notifications(request):
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'my_notifications.html', {'notifications': notifications})
+    notes = Notification.objects.filter(user=request.user).order_by("-created_at")
+    return render(request, "my_notifications.html", {"notifications": notes})
 
-@login_required
-def remove_from_cart(request, item_id):
+
+def submit_review(request):
     if request.method == "POST":
-        item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-        item.delete()
-        return redirect("view_cart")
-    return HttpResponse(status=405)
+        rating = request.POST.get("rating")
+        comment = request.POST.get("comment")
 
+        if not rating:
+            messages.error(request, "Please select a star rating.")
+            return redirect("reviews")
+
+        Review.objects.create(
+            user=request.user,
+            rating=int(rating),
+            comment=comment,
+        )
+
+        messages.success(request, "Thank you for your review!")
+        return redirect("reviews")
+
+    return redirect("reviews")
+
+def reviews_page(request):
+    all_reviews = Review.objects.order_by("-created_at")
+
+    context = {
+        "reviews": all_reviews,
+        "message": None,
+    }
+
+    # Pass Django's messages into your template's "message"
+    storage = messages.get_messages(request)
+    for msg in storage:
+        context["message"] = msg
+
+    return render(request, "reviews.html", context)
+
+def search_suggest(request):
+    q = request.GET.get("q", "")
+    books = Book.objects.filter(book_title__icontains=q).values_list("book_title", flat=True)[:5]
+    return JsonResponse(list(books), safe=False)
+
+def contact(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        message = request.POST.get("message")
+
+        # Save in database
+        Contact.objects.create(
+            name=name,
+            email=email,
+            phone=phone,
+            message=message,
+            date=timezone.now().date()
+        )
+
+        messages.success(request, "Your message has been sent successfully!")
+        return redirect("contact")
+
+    return render(request, "contact.html")
 
 @login_required
 def payment(request, book_id):
     book = get_object_or_404(Book, id=book_id)
 
     if request.method == "POST":
-        method = request.POST.get("payment_method")
-        name = request.POST.get("name")
-        card_num = request.POST.get("card_num")
-        expiry = request.POST.get("expiry")
-        cvv = request.POST.get("cvv")
-        upi_id = request.POST.get("upi_id")
-        address = request.POST.get("address")
-        contact = request.POST.get("contact")
-
-        payment_obj = Payment.objects.create(
-            book=book,
-            name=name,
-            payment_method=method,
-            card_num=card_num if method == "credit" else None,
-            expiry=expiry if method == "credit" else None,
-            cvv=cvv if method == "credit" else None,
-            upi_id=upi_id if method == "upi" else None,
-            address=address if method == "cash" else None,
-            contact=contact if method == "cash" else None,
+        payment = Payment.objects.create(
+            user=request.user,
+            name=request.user.username,
+            payment_method=request.POST.get("payment_method"),
+            card_num=request.POST.get("card_num") or None,
+            upi_id=request.POST.get("upi_id") or None,
+            address=request.POST.get("address"),
+            contact=request.POST.get("contact"),
         )
+        OrderedBook.objects.create(payment=payment, book=book)
 
-        return redirect('success', payment_id=payment_obj.id)
+        # reduce quantity
+        book.quantity -= 1
+        if book.quantity <= 0:
+            book.quantity = 0
+            book.out_of_stock_time = timezone.now()
+            book.is_sold = True
+        book.save()
+
+        return redirect("success", payment_id=payment.id)
 
     return render(request, "payment.html", {"book": book})
 
-
-@login_required
-def success(request, payment_id):
-    payment = Payment.objects.get(id=payment_id, user=request.user)
-    ordered_books = OrderedBook.objects.filter(payment=payment).select_related('book')
-
-    return render(request, "success.html", {
-        "payment": payment,
-        "ordered_books": ordered_books
-    })
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from xhtml2pdf import pisa
+from .models import Payment, OrderedBook
+from decimal import Decimal
+from django.shortcuts import get_object_or_404
 
 @login_required
 def download_receipt(request, payment_id):
-    payment = get_object_or_404(Payment, id=payment_id)
-    template_path = 'receipt.html'
-    context = {'order': payment}
+    payment = get_object_or_404(Payment, id=payment_id, user=request.user)
+    ordered_books_qs = OrderedBook.objects.select_related("book").filter(payment=payment)
+
+    ordered_books = []
+    for item in ordered_books_qs:
+        price_per_book = item.book.price * Decimal("1.3")
+        total_for_item = price_per_book * item.quantity
+        ordered_books.append({
+            "title": item.book.book_title,
+            "author": item.book.author,
+            "quantity": item.quantity,
+            "price_per_book": price_per_book,
+            "total_for_item": total_for_item,
+            "photo_url": request.build_absolute_uri(item.book.book_photo.url) if item.book.book_photo else None
+        })
+
+    books_total = sum(b['total_for_item'] for b in ordered_books)
+    delivery_charges = payment.delivery_charges or Decimal("0")
+    platform_fees = payment.platform_fees or Decimal("0")
+    grand_total = books_total + delivery_charges + platform_fees
+
+    context = {
+        "payment": payment,
+        "ordered_books": ordered_books,
+        "books_total": books_total,
+        "delivery_charges": delivery_charges,
+        "platform_fees": platform_fees,
+        "grand_total": grand_total,
+    }
+
+    html = render_to_string("receipt.html", context)
 
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="Receipt_Order_{payment.id}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename=receipt_{payment.id}.pdf'
 
-    template = get_template(template_path)
-    html = template.render(context)
-
-    pisa_status = pisa.CreatePDF(html, dest=response)
+    pisa_status = pisa.CreatePDF(src=html, dest=response)
     if pisa_status.err:
-        return HttpResponse('Error generating receipt.')
+        return HttpResponse("Error generating PDF", status=500)
     return response
 
 
-@login_required
 def checkout_success(request):
-    last_payment = Payment.objects.filter(name=request.user.username).last()
-    return render(request, 'checkout_success.html', {'payment': last_payment})
-
-
-@login_required
-def submit_review(request):
-    if request.method == 'POST':
-        rating = int(request.POST['rating'])
-        comment = request.POST['comment']
-        Review.objects.create(user=request.user, rating=rating, comment=comment)
-        return render(request, 'reviews.html', {
-            'message': 'Thank you for your review!',
-            'reviews': Review.objects.order_by('-created_at')
-        })
-    return render(request, 'reviews.html', {
-        'reviews': Review.objects.order_by('-created_at')
-    })
-
-
-@require_POST
-@login_required
-def add_to_wishlist(request, book_id):
-    book = get_object_or_404(Book, id=book_id)
-    Wishlist.objects.get_or_create(user=request.user, book=book)
-    return HttpResponse(status=204)
-
-@login_required
-def remove_from_wishlist(request, book_id):
-    Wishlist.objects.filter(user=request.user, book_id=book_id).delete()
-    return redirect('wishlist_view')
-
-@login_required
-def wishlist_view(request):
-    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('book')
-    return render(request, 'wishlist.html', {'wishlist_items': wishlist_items})
-
-@login_required
-def toggle_wishlist(request, book_id):
-    book = get_object_or_404(Book, id=book_id)
-    wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, book=book)
-    
-    if not created:
-        wishlist_item.delete()
-        return JsonResponse({'status': 'removed'})
-    return JsonResponse({'status': 'added'})
-
+    return render(request, "checkout_success.html")

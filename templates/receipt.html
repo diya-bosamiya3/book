@@ -1,30 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Receipt</title>
-    <style>
-        body { font-family: Arial, sans-serif; font-size: 14px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .details { margin-bottom: 20px; }
-        .details td { padding: 5px; }
-    </style>
+<meta charset="UTF-8">
+<title>Payment Receipt - Book Bazaar</title>
+<style>
+    /* Reset defaults */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #f9f9f9;
+        color: #000;
+        font-size: 12px;
+        padding: 20px;
+    }
+
+    .receipt-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border: 1px solid #ddd;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .header p {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .section-title {
+        font-weight: bold;
+        font-size: 14px;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 3px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+
+    table th, table td {
+        padding: 6px 5px;
+        border: 1px solid #ccc;
+        font-size: 12px;
+    }
+
+    table th {
+        background-color: #f0f0f0;
+        text-align: left;
+    }
+
+    .totals td {
+        border: none;
+        padding: 5px 0;
+    }
+
+    .totals tr td:last-child {
+        text-align: right;
+        font-weight: bold;
+    }
+
+    .grand-total td {
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .books-table img {
+        width: 50px;
+        height: 70px;
+        object-fit: cover;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+
+    .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #666;
+        margin-top: 20px;
+    }
+
+    a {
+        color: #333;
+        text-decoration: none;
+    }
+</style>
 </head>
 <body>
+<div class="receipt-container">
     <div class="header">
-        <h2>Book Bazaar - Payment Receipt</h2>
-        <p>Order ID: {{ order.id }}</p>
-        <p>Date: {{ order.timestamp|date:"d-m-Y H:i" }}</p>
+        <h1>Book Bazaar</h1>
+        <p>Professional Receipt for Your Order</p>
+        <p>Order ID: {{ payment.id }} | Date: {{ payment.created_at|date:"d-m-Y H:i" }}</p>
     </div>
-    <table class="details">
-        <tr><td><strong>Name:</strong></td><td>{{ order.name }}</td></tr>
-        <tr><td><strong>Book:</strong></td><td>{{ order.book.book_title }}</td></tr>
-        <tr><td><strong>Author:</strong></td><td>{{ order.book.author }}</td></tr>
-        <tr><td><strong>Price:</strong></td><td>₹{{ order.book.price }}</td></tr>
-        <tr><td><strong>Payment Method:</strong></td><td>{{ order.payment_method }}</td></tr>
-        <tr><td><strong>Contact:</strong></td><td>{{ order.contact }}</td></tr>
-        <tr><td><strong>Address:</strong></td><td>{{ order.address }}</td></tr>
+
+    <div class="section-title">Customer Information</div>
+    <table>
+        <tr><td><strong>Name:</strong></td><td>{{ payment.name }}</td></tr>
+        <tr><td><strong>Contact:</strong></td><td>{{ payment.contact }}</td></tr>
+        <tr><td><strong>Address:</strong></td><td>{{ payment.address }}</td></tr>
     </table>
-    <p>Thank you for shopping with Book Bazaar!</p>
+
+    <div class="section-title">Order Details</div>
+    <table class="books-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Book</th>
+                <th>Author</th>
+                <th>Qty</th>
+                <th>Price (₹)</th>
+                <th>Total (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in ordered_books %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    {% if item.photo_url %}
+                    <img src="{{ item.photo_url }}" alt="{{ item.title }}" />
+                    {% endif %}
+                    {{ item.title }}
+                </td>
+                <td>{{ item.author }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price_per_book }}</td>
+                <td>{{ item.total_for_item }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr><td>Books Total:</td><td>₹{{ books_total }}</td></tr>
+        <tr><td>Delivery Charges:</td><td>₹{{ delivery_charges }}</td></tr>
+        <tr><td>Platform Fees:</td><td>₹{{ platform_fees }}</td></tr>
+        <tr class="grand-total"><td>Grand Total:</td><td>₹{{ grand_total }}</td></tr>
+    </table>
+
+    <div class="footer">
+        Thank you for shopping with Book Bazaar! <br>
+        Visit us again at <a href="https://www.bookbazaar.com" target="_blank">www.bookbazaar.com</a>
+    </div>
+</div>
 </body>
 </html>

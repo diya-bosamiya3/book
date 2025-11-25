@@ -1,0 +1,76 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Book — Book Bazaar{% endblock %}
+
+
+{% block extra_css %}
+
+<style>
+  .edit-card { max-width: 760px; margin: 30px auto; background: #fff; padding: 22px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
+  .edit-card h2 { margin-bottom: 18px; font-weight: 700; }
+  .current-img { width:130px; height:130px; object-fit:cover; border-radius:8px; border:1px solid #e6e6e6; }
+  label.form-label { font-weight:600; }
+  .btn-row { display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:18px; }
+  @media (max-width:576px){ .btn-row { flex-direction:column; } }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="edit-card">
+  <h2>Edit Book</h2>
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label">Book Title</label>
+      <input type="text" name="book_title" value="{{ book.book_title }}" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Author</label>
+      <input type="text" name="author" value="{{ book.author }}" class="form-control" required>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Price (₹)</label>
+        <input type="number" step="0.01" min="0" name="price" value="{{ book.price }}" class="form-control" required>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Quantity</label>
+        <input type="number" name="quantity" min="0" value="{{ book.quantity }}" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Current Photo</label><br>
+      {% if book.book_photo %}
+        <img src="{{ book.book_photo.url }}" alt="book image" class="current-img mb-2">
+      {% else %}
+        <p class="text-muted">No image uploaded.</p>
+      {% endif %}
+      <div class="mt-2">
+        <label class="form-label">Upload New Photo (optional)</label>
+        <input type="file" name="book_photo" class="form-control">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'profile' %}" class="btn btn-secondary ms-2">Cancel</a>
+      </div>
+      <div>
+        <form method="post" action="{% url 'delete_book' book.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button class="btn btn-danger" onclick="return confirm('Delete this listing?')">Delete Book</button>
+        </form>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

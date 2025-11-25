@@ -1,183 +1,182 @@
 {% extends "base.html" %}
-{% block title %}Rate our App{% endblock title %}
+{% block title %}Rate our App{% endblock %}
 {% load static %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'book_app/reviews.css' %}">
 <style>
-  .review-container {
-    max-width: 800px;
-    margin: 30px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  }
 
-  h2 {
-    margin-bottom: 15px;
-    text-align: center;
-  }
+.preview-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
 
-  .star-rating {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: center;
-    margin-bottom: 15px;
-  }
+.d-none { display: none !important; }
 
-  .star-rating input {
-    display: none;
-  }
+.preview-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
 
-  .star-rating label {
-    font-size: 2rem;
-    color: #ddd;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
+.close-preview {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  cursor: pointer;
+  font-size: 22px;
+}
 
-  .star-rating label.hover,
-  .star-rating label.selected {
-    color: gold;
-  }
+/* Review Form CSS */
+.review-container {
+  max-width: 700px;
+  margin: 25px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+}
+.star-rating { display: flex; flex-direction: row-reverse; justify-content: center; }
+.star-rating input { display: none; }
+.star-rating label { font-size: 2rem; color: #ddd; cursor: pointer; }
+.star-rating label.selected, .star-rating label.hover { color: gold; }
+textarea {
+    width: 100%; height: 100px; padding: 10px;
+    border: 1px solid #ccc; border-radius: 6px;
+}
+button { padding: 10px 20px; background: #28a745; color: #fff; border-radius: 6px; border: none; cursor: pointer; }
+button:hover { background: #218838; }
+.review-list { margin-top: 25px; }
+.review { border-top: 1px solid #ddd; padding: 10px 0; }
+.review:first-child { border-top: none; }
+.stars { color: gold; }
+.stars .empty { color: #ddd; }
 
-  textarea {
-    width: 100%;
-    height: 100px;
-    padding: 10px;
-    margin-top: 10px;
-    resize: vertical;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-  }
-
-  button {
-    display: block;
-    margin: 15px auto;
-    padding: 10px 20px;
-    background: #28a745;
-    color: white;
-    font-size: 1rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background: #218838;
-  }
-
-  .message {
-    text-align: center;
-    margin-top: 10px;
-    color: green;
-    font-weight: bold;
-  }
-
-  .review-list {
-    margin-top: 30px;
-  }
-
-  .review {
-    border-top: 1px solid #ddd;
-    padding: 10px 0;
-  }
-
-  .review:first-child {
-    border-top: none;
-  }
-
-  .user {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  .stars {
-    color: gold;
-    margin-bottom: 5px;
-  }
-
-  .stars .empty {
-    color: #ddd;
-  }
 </style>
 {% endblock extra_css %}
 
+
+
 {% block body %}
+
 <div class="review-container">
-  <h2>Leave a Review</h2>
 
-  <form method="POST" action="{% url 'submit_review' %}">
-    {% csrf_token %}
-    <div class="star-rating">
-      {% for i in "54321" %}
-        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}">
-        <label for="star{{ i }}" data-value="{{ i }}">★</label>
-      {% endfor %}
-    </div>
+    <h2 class="text-center">Leave a Review</h2>
 
-    <textarea name="comment" placeholder="Write your thoughts here..." required></textarea>
-    <button type="submit">Submit Review</button>
+    {% if user.is_authenticated %}
 
-    {% if message %}
-      <div class="message">{{ message }}</div>
-    {% endif %}
-  </form>
+    <!-- ============== LOGGED-IN FORM ============== -->
+    <form method="POST" action="{% url 'submit_review' %}">
+        {% csrf_token %}
 
-  <div class="review-list">
-    <h2>What Others Say</h2>
-    {% for review in reviews %}
-      <div class="review">
-        <div class="user">{{ review.user.username }} — {{ review.created_at|date:"d M Y H:i" }}</div>
-        <div class="stars">
-          {% for i in "12345"|slice:":review.rating"|make_list %}
-            <label>★</label>
-          {% endfor %}
-          {% for i in "12345"|slice:"review.rating:"|make_list %}
-            <label class="empty">★</label>
-          {% endfor %}
+        <div class="star-rating">
+            {% for i in "54321" %}
+            <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}">
+            <label for="star{{ i }}" data-value="{{ i }}">★</label>
+            {% endfor %}
         </div>
-        <div class="comment">{{ review.comment }}</div>
-      </div>
-    {% empty %}
-      <p>No reviews yet. Be the first to leave one!</p>
-    {% endfor %}
-  </div>
+
+        <textarea name="comment" placeholder="Write your review..." required></textarea>
+
+        <button type="submit">Submit Review</button>
+    </form>
+
+    {% else %}
+
+    <!-- ============== GUEST USER — SHOW POPUP ============== -->
+    <button onclick="showLoginBox()">Submit Review</button>
+
+    {% endif %}
+
+
+
+    <!-- ============== REVIEWS LIST ============== -->
+    <div class="review-list">
+        <h2>What Others Say</h2>
+
+        {% for review in reviews %}
+            <div class="review">
+                <div class="user"><b>{{ review.user.username }}</b> — {{ review.created_at|date:"d M Y H:i" }}</div>
+
+                <div class="stars">
+                    {% for x in "12345"|slice:":review.rating"|make_list %}
+                        <span>★</span>
+                    {% endfor %}
+                    {% for x in "12345"|slice:"review.rating:"|make_list %}
+                        <span class="empty">★</span>
+                    {% endfor %}
+                </div>
+
+                <div class="comment">{{ review.comment }}</div>
+            </div>
+        {% empty %}
+            <p>No reviews yet. Be the first!</p>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+<!-- ============== LOGIN REQUIRED POPUP ============== -->
+{% if not user.is_authenticated %}
+<div id="loginModal" class="preview-modal d-none">
+    <div class="preview-content">
+        <span class="close-preview" onclick="closeLoginBox()">&times;</span>
+
+        <h4>Login Required</h4>
+        <p>You must be logged in to submit a review.</p>
+
+        <a href="/login/?next={{ request.path }}" class="btn btn-primary w-100 mt-3">
+            Login Now
+        </a>
+    </div>
 </div>
 
 <script>
-  const stars = document.querySelectorAll('.star-rating label');
-  let selected = 0;
+function showLoginBox() {
+    document.getElementById("loginModal").classList.remove("d-none");
+}
 
-  stars.forEach((star, index) => {
-    star.addEventListener('mouseover', () => {
-      clearHover();
-      for (let i = 0; i <= index; i++) {
-        stars[i].classList.add('hover');
-      }
-    });
-
-    star.addEventListener('mouseout', () => {
-      clearHover();
-    });
-
-    star.addEventListener('click', () => {
-      selected = parseInt(star.getAttribute('data-value'));
-      clearSelected();
-      for (let i = 0; i < selected; i++) {
-        stars[i].classList.add('selected');
-      }
-      document.getElementById('star' + selected).checked = true;
-    });
-  });
-
-  function clearHover() {
-    stars.forEach(star => star.classList.remove('hover'));
-  }
-
-  function clearSelected() {
-    stars.forEach(star => star.classList.remove('selected'));
-  }
+function closeLoginBox() {
+    document.getElementById("loginModal").classList.add("d-none");
+}
 </script>
+{% endif %}
+
+
+
+<!-- ============== STAR HOVER SCRIPT (LOGGED-IN ONLY) ============== -->
+{% if user.is_authenticated %}
+<script>
+const stars = document.querySelectorAll('.star-rating label');
+let selected = 0;
+
+stars.forEach((star, index) => {
+    star.addEventListener("mouseover", () => {
+        stars.forEach(s => s.classList.remove("hover"));
+        for (let i = 0; i <= index; i++) stars[i].classList.add("hover");
+    });
+
+    star.addEventListener("mouseout", () => {
+        stars.forEach(s => s.classList.remove("hover"));
+    });
+
+    star.addEventListener("click", () => {
+        selected = parseInt(star.dataset.value);
+        stars.forEach(s => s.classList.remove("selected"));
+        for (let i = 0; i < selected; i++) stars[i].classList.add("selected");
+    });
+});
+</script>
+{% endif %}
+
 {% endblock body %}

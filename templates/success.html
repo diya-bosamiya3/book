@@ -8,148 +8,55 @@
     background: linear-gradient(to right, #f8f9fa, #e2e8f0);
     font-family: 'Segoe UI', sans-serif;
   }
+  .confirmation { max-width: 1000px; margin: 4rem auto; padding: 2.5rem; background-color: #fff; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); text-align: center; }
+  .confirmation h1 { color: #38a169; font-size: 2.8rem; margin-bottom: 1.2rem; font-weight: bold; }
+  .confirmation p { color: #4a5568; font-size: 1.1rem; margin-bottom: 2.5rem; }
 
-  .confirmation {
-    max-width: 1000px;
-    margin: 4rem auto;
-    padding: 2.5rem;
-    background-color: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-    text-align: center;
-  }
-
-  .confirmation h1 {
-    color: #38a169;
-    font-size: 2.8rem;
-    margin-bottom: 1.2rem;
-    font-weight: bold;
-  }
-
-  .confirmation p {
-    color: #4a5568;
-    font-size: 1.1rem;
-    margin-bottom: 2.5rem;
-  }
-
-  .summary {
-    background-color: #f7fafc;
-    border-radius: 16px;
-    padding: 1.5rem;
-    text-align: left;
-    margin-bottom: 2.5rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .summary img {
-    width: 140px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-    flex-shrink: 0;
-  }
-
-  .summary-content {
-    flex: 1;
-  }
-
-  .summary h3 {
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
-    color: #2d3748;
-    font-weight: 600;
-  }
-
-  .row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 1rem;
-  }
-
-  .row span {
-    color: #4a5568;
-  }
-
-  .row strong {
-    color: #2c5282;
-  }
-
-  .actions {
-    margin-top: 3rem;
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-  }
-
-  .btn-primary {
-    background: linear-gradient(to right, #667eea, #764ba2);
-    color: white;
-    padding: 0.9rem 2rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1rem;
-    border: none;
-    text-decoration: none;
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-    transition: all 0.3s ease;
-  }
-
-  .btn-primary:hover {
-    background: linear-gradient(to right, #5a67d8, #6b46c1);
-  }
-
-  .btn-outline {
-    padding: 0.9rem 2rem;
-    border: 2px solid #667eea;
-    color: #667eea;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-  }
-
-  .btn-outline:hover {
-    background-color: #eef2ff;
-  }
+  .summary { background-color: #f7fafc; border-radius: 16px; padding: 1.5rem; text-align: left; margin-bottom: 2.5rem; box-shadow: 0 4px 14px rgba(0,0,0,0.06); display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
+  .summary img { width: 140px; height: 200px; object-fit: cover; border-radius: 12px; box-shadow: 0 6px 16px rgba(0,0,0,0.1); flex-shrink: 0; }
+  .summary-content { flex: 1; }
+  .summary h3 { font-size: 1.4rem; margin-bottom: 1rem; color: #2d3748; font-weight: 600; }
+  .row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0; font-size: 1rem; }
+  .row span { color: #4a5568; }
+  .row strong { color: #2c5282; }
+  .totals { margin-top: 1rem; font-weight: 600; }
+  .actions { margin-top: 3rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+  .btn-primary { background: linear-gradient(to right, #667eea, #764ba2); color: white; padding: 0.9rem 2rem; border-radius: 12px; font-weight: 600; font-size: 1rem; border: none; text-decoration: none; box-shadow: 0 6px 16px rgba(102,126,234,0.4); transition: all 0.3s ease; }
+  .btn-primary:hover { background: linear-gradient(to right, #5a67d8, #6b46c1); }
+  .btn-outline { padding: 0.9rem 2rem; border: 2px solid #667eea; color: #667eea; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; }
+  .btn-outline:hover { background-color: #eef2ff; }
 </style>
 {% endblock extra_css %}
 
 {% block body %}
 <div class="confirmation">
   <h1>Payment Successful!</h1>
-  <p>Thank you <strong>{{ payment.name }}</strong> for your order. <br>Your books are now reserved and will be processed shortly.</p>
+  <p>Thank you <strong>{{ payment.name }}</strong> for your order.<br>Your books are now reserved and will be processed shortly.</p>
 
   {% for item in ordered_books %}
   <div class="summary">
-    <img src="{{ item.book.book_photo.url }}" alt="{{ item.book.book_title }}" />
+    <!-- Use photo_url from the view -->
+    <img src="{{ item.photo_url }}" alt="{{ item.title }}" />
+
     <div class="summary-content">
       <h3>Book {{ forloop.counter }}</h3>
-      <div class="row"><span><strong>Order ID:</strong></span><span>#{{ item.id }}</span></div>
-      <div class="row"><span><strong>Title:</strong></span><span>{{ item.book.book_title }}</span></div>
-      <div class="row"><span><strong>Author:</strong></span><span>{{ item.book.author }}</span></div>
-      <div class="row"><span><strong>Price:</strong></span><span>₹{{ item.book.price }}</span></div>
-      <div class="row"><span><strong>Payment Mode:</strong></span><span>{{ payment.get_payment_method_display }}</span></div>
-
-      {% if payment.payment_method == 'credit' %}
-      <div class="row"><span><strong>Card Ending:</strong></span><span>**** {{ payment.card_num|slice:"-4:" }}</span></div>
-      {% elif payment.payment_method == 'upi' %}
-      <div class="row"><span><strong>UPI ID:</strong></span><span>{{ payment.upi_id }}</span></div>
-      {% elif payment.payment_method == 'cash' %}
-      <div class="row"><span><strong>Address:</strong></span><span>{{ payment.address }}</span></div>
-      <div class="row"><span><strong>Contact No.:</strong></span><span>{{ payment.contact }}</span></div>
-      {% endif %}
+      <div class="row"><span><strong>Title:</strong></span><span>{{ item.title }}</span></div>
+      <div class="row"><span><strong>Author:</strong></span><span>{{ item.author }}</span></div>
+      <div class="row"><span><strong>Quantity:</strong></span><span>{{ item.quantity }}</span></div>
+      <div class="row"><span><strong>Price per Book:</strong></span><span>₹{{ item.price_per_book }}</span></div>
+      <div class="row"><span><strong>Total for this Book:</strong></span><span>₹{{ item.total_for_item }}</span></div>
     </div>
   </div>
   {% endfor %}
+
+  <div class="summary">
+    <div class="summary-content">
+      <div class="row"><span>Books Total:</span><span>₹{{ books_total }}</span></div>
+      <div class="row"><span>Delivery Charges:</span><span>₹{{ delivery_charges }}</span></div>
+      <div class="row"><span>Platform Fees:</span><span>₹{{ platform_fees }}</span></div>
+      <div class="row totals"><strong>Grand Total:</strong><strong>₹{{ grand_total }}</strong></div>
+    </div>
+  </div>
 
   <div class="actions">
     <a href="{% url 'dashboard' %}" class="btn-primary">Continue Shopping</a>

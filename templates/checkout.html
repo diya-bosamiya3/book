@@ -1,5 +1,77 @@
 {% extends "base.html" %}
 {% block title %}Checkout - Book Bazaar{% endblock %}
+
+{% block extra_css %}
+<style>
+  body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .container { max-width: 1100px; }
+  h2 { font-weight: 700; color: #0d6efd; margin-bottom: 30px; }
+
+  .checkout-wrapper {
+    display: flex; gap: 30px; flex-wrap: wrap;
+  }
+
+  .cart-summary, .payment-form {
+    flex: 1 1 45%;
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+  }
+  .cart-summary:hover, .payment-form:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+  }
+
+  .list-group-item {
+    border: none; border-radius: 10px; margin-bottom: 12px;
+    padding: 18px 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .list-group-item:hover {
+    transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  }
+  .list-group-item strong { font-size: 1.05rem; color: #333; }
+  .list-group-item small { color: #6c757d; }
+  .bg-warning { background: #fff4e1 !important; }
+  .bg-light { background: #f8f9fa !important; }
+
+  .form-label { font-weight: 600; margin-bottom: 6px; }
+  input.form-control, textarea.form-control, select.form-select {
+    border-radius: 8px; border: 1px solid #ced4da; padding: 12px 10px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
+    border-color: #0d6efd; box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+  }
+
+  button.btn-success {
+    background: linear-gradient(90deg, #0d6efd, #6610f2); border: none;
+    font-weight: 600; font-size: 1.1rem; padding: 12px; border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  button.btn-success:hover {
+    transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  }
+
+  @media (max-width: 992px) {
+    .checkout-wrapper { flex-direction: column; }
+    .cart-summary, .payment-form { flex: 1 1 100%; }
+  }
+
+  .cart-summary h4, .payment-form h4 {
+    font-weight: 700; margin-bottom: 20px; color: #0d6efd;
+    border-bottom: 2px solid #0d6efd; display: inline-block; padding-bottom: 5px;
+  }
+  .list-group-item.bg-warning { font-size: 1.15rem; font-weight: 700; color: #000; }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container mt-5">
   <h2 class="mb-4"><i class="bi bi-credit-card"></i> Checkout</h2>
@@ -10,34 +82,44 @@
 
   <form method="POST">
     {% csrf_token %}
-    <div class="row">
-      <!-- Cart Items Summary -->
-      <div class="col-md-6">
+    <div class="checkout-wrapper">
+
+      <!-- Cart Summary -->
+      <div class="cart-summary">
         <h4>Books in Your Cart:</h4>
         <ul class="list-group mb-4">
           {% for item in items %}
           <li class="list-group-item d-flex justify-content-between">
-            <span>{{ item.book.book_title }}</span>
-            <strong>₹{{ item.book.price }}</strong>
+            <div>
+              <strong>{{ item.book.book_title }}</strong><br>
+              <small>Qty: {{ item.quantity }} × ₹{{ item.price_with_profit|floatformat:2 }}</small>
+            </div>
+            <strong>₹{{ item.total_price|floatformat:2 }}</strong>
           </li>
           {% endfor %}
           <li class="list-group-item d-flex justify-content-between bg-light">
-            <strong>Total</strong>
-            <strong>₹{{ total }}</strong>
+            <span>Delivery Charges</span>
+            <strong>₹{{ delivery_charges }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between bg-light">
+            <span>Platform Fees</span>
+            <strong>₹{{ platform_fees }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between bg-warning text-dark fw-bold">
+            <span>Total</span>
+            <strong>₹{{ total|floatformat:2 }}</strong>
           </li>
         </ul>
       </div>
 
       <!-- Payment Form -->
-      <div class="col-md-6">
+      <div class="payment-form">
         <h4>Payment Info:</h4>
-
         <div class="mb-3">
           <label class="form-label">Payment Method</label>
           <select class="form-select" name="payment_method" required onchange="toggleFields(this.value)">
             <option value="credit">Credit Card</option>
             <option value="upi">UPI</option>
-            <option value="cash">Cash on Delivery</option>
           </select>
         </div>
 
@@ -53,7 +135,6 @@
           <input type="text" name="upi_id" class="form-control" placeholder="Your UPI ID">
         </div>
 
-        <!-- Common Fields -->
         <div class="mb-2">
           <input type="text" name="contact" class="form-control" placeholder="Contact Number" required>
         </div>
@@ -61,8 +142,11 @@
           <textarea name="address" class="form-control" placeholder="Delivery Address" required></textarea>
         </div>
 
-        <button type="submit" class="btn btn-success w-100 mt-3">Pay ₹{{ total }}</button>
+        <button type="submit" class="btn btn-success w-100 mt-3">
+          Pay ₹{{ total|floatformat:2 }}
+        </button>
       </div>
+
     </div>
   </form>
 </div>

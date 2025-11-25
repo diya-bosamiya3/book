@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block body %}
+<div class="container mt-5" style="max-width:600px;">
+
+    <h2 class="mb-4">Edit Profile</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="p-4 border rounded bg-white shadow">
+        {% csrf_token %}
+
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control mb-3"
+               value="{{ user.username }}" required>
+
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control mb-3"
+               value="{{ user.email }}" required>
+
+        <label class="form-label">Profile Photo</label><br>
+        <img src="{% if profile.profile %}{{ profile.profile.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}"
+             class="mb-2" width="80" height="80" style="border-radius:10px;object-fit:cover;">
+        <input type="file" name="profile" class="form-control mb-3">
+
+        <button type="submit" class="btn btn-primary w-100">Update Profile</button>
+
+        <a href="{% url 'profile_view' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+    </form>
+
+</div>
+{% endblock %}

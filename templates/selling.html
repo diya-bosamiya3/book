@@ -2,78 +2,11 @@
 {% load static %}
 
 {% block title %}Sell Old Book{% endblock title %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'book_app/selling.css' %}">
 {% endblock extra_css %}
-.sell-box-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem 1rem;
-  background: linear-gradient(135deg, #e8f5e9, #ffffff);
-}
 
-.sell-box {
-  background: #ffffff;
-  padding: 2.5rem 2rem;
-  border-radius: 20px;
-  max-width: 850px;
-  width: 100%;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  border: 2px solid #b2dfdb;
-  animation: fadeIn 0.6s ease-in;
-}
-
-.sell-box h2 {
-  font-size: 2.4rem;
-  color: #004d40;
-  margin-bottom: 0.4rem;
-  text-align: center;
-}
-
-.sell-box .intro {
-  text-align: center;
-  font-size: 1rem;
-  color: #616161;
-  margin-bottom: 2rem;
-}
-
-.input-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.4rem;
-}
-
-.input-grid > div {
-  display: flex;
-  flex-direction: column;
-}
-
-textarea {
-  margin-top: 1.4rem;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Responsive for smaller screens */
-@media (max-width: 768px) {
-  .input-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sell-box {
-    padding: 2rem 1.2rem;
-  }
-}
 {% block body %}
 <div class="sell-box-wrapper">
   <div class="sell-box">
@@ -82,7 +15,9 @@ textarea {
 
     <form action="{% url 'selling' %}" method="POST" enctype="multipart/form-data">
       {% csrf_token %}
+      
       <div class="input-grid">
+
         <div>
           <label for="name">Your Name:</label>
           <input type="text" id="name" name="name" placeholder="Enter your name" required>
@@ -129,6 +64,13 @@ textarea {
           <label for="book_photo">Upload Book Photo:</label>
           <input type="file" id="photo" name="photo" accept="image/*" required>
         </div>
+
+        <!-- ⭐ NEW QUANTITY FIELD ⭐ -->
+        <div>
+          <label for="quantity">Quantity Available:</label>
+          <input type="number" id="quantity" name="quantity" placeholder="How many copies?" min="1" required>
+        </div>
+
       </div>
 
       <label for="description">Description (Optional):</label>
