@@ -1,0 +1,6 @@
+Customer: Harsh
+Items:
+  - Mobile | Qty: 1 | Unit Price: 22000 | Subtotal: 22000
+  - Earbuds | Qty: 2 | Unit Price: 1999 | Subtotal: 3998
+  - Backpack | Qty: 1 | Unit Price: 899 | Subtotal: 899
+Total Amount: 26897

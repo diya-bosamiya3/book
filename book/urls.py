@@ -9,6 +9,7 @@ admin.site.site_header = "Admin Page"
 admin.site.site_title = "Managing system"
 admin.site.index_title = "Welcome to the managing page"
 urlpatterns = [
+    path('test-email/', test_email),
     path('admin/', admin.site.urls),
     path('login/',login,name='login'),
     path('logout/',logout_page,name='logout'),

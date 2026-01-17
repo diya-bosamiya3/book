@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     Nuser, LoginActivity, Book, Contact, Payment, 
-    Cart, CartItem, OrderedBook, Order, Wishlist, Review,Notification
+    Cart, CartItem, OrderedBook, Order, Wishlist, Review,Notification,Transaction
 )
 
 # Unregister and re-register the built-in User with custom admin
@@ -96,3 +96,23 @@ class NotificationAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'message')
     ordering = ('-created_at',)
 
+# Optional: customize admin display
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'book',
+        'buyer',
+        'seller',
+        'selling_price',
+        'delivery_charges',
+        'platform_fees',
+        'platform_price',
+        'profit_amount',
+        'total_amount_paid',
+        'date',
+    )
+    list_filter = ('date', 'buyer', 'seller')
+    search_fields = ('book__book_title', 'buyer__username', 'seller__username')
+
+# Register the model with admin
+admin.site.register(Transaction, TransactionAdmin)

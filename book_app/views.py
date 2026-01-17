@@ -15,7 +15,23 @@ from .models import*
 from django.db.models import F, FloatField, ExpressionWrapper
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+from io import BytesIO
+from django.http import HttpResponse
+
 genai.configure(api_key="YOUR_GEMINI_API_KEY")
+
+def test_email(request):
+    send_mail(
+        subject="Testing Django Email",
+        message="Hi Diya, your email setup is working!",
+        from_email=None,  # uses DEFAULT_FROM_EMAIL
+        recipient_list=["diyabosamiya11@gmail.com"],
+        fail_silently=False,
+    )
+    return HttpResponse("Email sent successfully!")
 
 @login_required
 def ai_book_recommend(request):
@@ -146,23 +162,35 @@ def profile_view(request):
 @login_required
 def edit_profile(request):
     user = request.user
-    profile = Profile.objects.get(user=user)
+    profile, _ = Profile.objects.get_or_create(user=user)  # ensure profile exists
 
     if request.method == "POST":
-        username = request.POST.get("username")
-        email = request.POST.get("email")
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
         profile_pic = request.FILES.get("profile")
 
-        user.username = username
-        user.email = email
+        # Validate username
+        if User.objects.filter(username=username).exclude(id=user.id).exists():
+            messages.error(request, "Username is already taken.")
+            return redirect("edit_profile")
+
+        # Validate email
+        if User.objects.filter(email=email).exclude(id=user.id).exists():
+            messages.error(request, "Email is already registered.")
+            return redirect("edit_profile")
+
+        # Update user
+        user.username = username or user.username
+        user.email = email or user.email
         user.save()
 
+        # Update profile picture if provided
         if profile_pic:
             profile.profile = profile_pic
             profile.save()
 
         messages.success(request, "Profile updated successfully!")
-        return redirect("profile_view")
+        return redirect("profile")
 
     return render(request, "edit_profile.html", {"user": user, "profile": profile})
 
@@ -172,14 +200,35 @@ def edit_profile(request):
 def profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
 
+    # Books you are currently selling
     selling_books = Book.objects.filter(seller=request.user, is_sold=False)
 
-    # Orders received
+    # Orders received (when YOU are the seller)
     orders_received = OrderedBook.objects.filter(
         book__seller=request.user
     ).select_related("book", "payment", "payment__user")
 
-    # --- CART COUNT ---
+    # Calculate profit
+    sold_orders_with_totals = []
+    total_selling = Decimal(0)
+
+    for item in orders_received:
+        price_with_profit = item.book.price * Decimal("1.3")
+        total_amount = price_with_profit * item.quantity
+        total_selling += total_amount
+
+        sold_orders_with_totals.append({
+            "order": item,
+            "price_with_profit": price_with_profit,
+            "total_amount": total_amount
+        })
+
+    # Orders YOU bought (your recent purchases)
+    my_orders = OrderedBook.objects.filter(
+        payment__user=request.user
+    ).select_related("book", "payment").order_by("-payment__created_at")
+
+    # Cart & wishlist
     try:
         cart = Cart.objects.get(user=request.user)
         cart_items = CartItem.objects.filter(cart=cart)
@@ -188,29 +237,29 @@ def profile(request):
         cart_items = []
         cart_count = 0
 
-    # --- WISHLIST COUNT ---
     wishlist_items = Wishlist.objects.filter(user=request.user)
     wishlist_count = wishlist_items.count()
 
     context = {
         "profile": profile,
         "selling_books": selling_books,
-        "sold_orders": orders_received,
-        "orders": Order.objects.filter(buyer=request.user),
 
-        # ⭐ VERY IMPORTANT
+        # Seller side
+        "sold_orders": sold_orders_with_totals,
+        "total_selling": total_selling,
+
+        # Buyer side — THIS FIXES YOUR PROBLEM
+        "my_orders": my_orders,
+
+        # Extras
         "cart_items": cart_items,
         "cart_count": cart_count,
-
         "wishlist": wishlist_items,
         "wishlist_count": wishlist_count,
-
         "reviews": Review.objects.filter(user=request.user),
     }
 
     return render(request, "profile.html", context)
-
-
 
 @login_required
 def edit_book(request, book_id):
@@ -408,32 +457,44 @@ def update_cart_quantity(request, item_id):
 # =======================
 #  CART
 # =======================
+@login_required
 def add_to_cart(request, book_id):
-    if request.method != "POST":
-        return HttpResponse(status=405)
-
     run_auto_hide_cleanup()
     book = get_object_or_404(Book, id=book_id)
+
+    # Allow GET (from wishlist) and POST (from product page)
+    if request.method == "GET":
+        quantity = 1
+    elif request.method == "POST":
+        quantity = int(request.POST.get("quantity", 1))
+    else:
+        return HttpResponse(status=405)
 
     if not is_book_visible(book):
         return JsonResponse({"error": "out_of_stock"}, status=400)
 
+    # Get or create cart
     cart, _ = Cart.objects.get_or_create(user=request.user)
 
-    quantity = int(request.POST.get("quantity", 1))
-
+    # Cart item
     cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
 
     if created:
-        # First time adding this book
         cart_item.quantity = quantity
     else:
-        # Already exists → increase quantity
         cart_item.quantity += quantity
 
     cart_item.save()
 
-    return redirect("book")
+    # -----------------------------------
+    # 🟢 Auto-remove from wishlist
+    # -----------------------------------
+    referer = request.META.get("HTTP_REFERER", "")
+    if "wishlist" in referer.lower():
+        Wishlist.objects.filter(user=request.user, book=book).delete()
+
+    # Redirect back to same page
+    return redirect(referer or "book")
 
 
 def cart_count(request):
@@ -493,18 +554,29 @@ def checkout(request):
     cart = get_object_or_404(Cart, user=request.user)
     items = cart.items.select_related("book")
 
-    total = sum(item.total_price for item in items)
+    from decimal import Decimal
 
-    DELIVERY_CHARGES = 60
-    PLATFORM_FEES = 20
+    # ------ MAIN PRICE CALCULATION WITH 30% PROFIT ------
+    total = Decimal(0)
+    for item in items:
+        price_with_profit = item.book.price * Decimal("1.3")  # 30% profit
+        total += price_with_profit * item.quantity
+
+    # Extra charges
+    DELIVERY_CHARGES = Decimal(60)
+    PLATFORM_FEES = Decimal(20)
+
     total_with_fees = total + DELIVERY_CHARGES + PLATFORM_FEES
 
     if request.method == "POST":
+
+        # Check if all books are still available
         unavailable = [i.book.book_title for i in items if not is_book_visible(i.book)]
         if unavailable:
             return render(request, "checkout.html", {
                 "items": items,
-                "total": total_with_fees,
+                "total": total,
+                "total_with_fees": total_with_fees,
                 "delivery_charges": DELIVERY_CHARGES,
                 "platform_fees": PLATFORM_FEES,
                 "error": "Unavailable: " + ", ".join(unavailable)
@@ -526,8 +598,14 @@ def checkout(request):
 
             for item in items:
                 book = Book.objects.select_for_update().get(id=item.book.id)
-                OrderedBook.objects.create(payment=payment, book=book, quantity=item.quantity)
 
+                OrderedBook.objects.create(
+                    payment=payment,
+                    book=book,
+                    quantity=item.quantity
+                )
+
+                # Reduce stock
                 book.quantity -= item.quantity
                 if book.quantity <= 0:
                     book.quantity = 0
@@ -536,19 +614,22 @@ def checkout(request):
                     book.is_sold = True
                 book.save()
 
+                # Notify seller
                 if book.seller:
                     Notification.objects.create(
                         user=book.seller,
                         message=f"{request.user.username} ordered your book '{book.book_title}'"
                     )
 
+            # Clear cart
             items.delete()
 
         return redirect("success", payment_id=payment.id)
 
     return render(request, "checkout.html", {
         "items": items,
-        "total": total_with_fees,
+        "total": total,                        # total with 30% profit
+        "total_with_fees": total_with_fees,    # full cost
         "delivery_charges": DELIVERY_CHARGES,
         "platform_fees": PLATFORM_FEES
     })
@@ -558,17 +639,22 @@ def success(request, payment_id):
     payment = get_object_or_404(Payment, id=payment_id, user=request.user)
     ordered_books = OrderedBook.objects.select_related("book").filter(payment=payment)
 
-    # Prepare book details including image
+    from decimal import Decimal
+
     books_total = Decimal(0)
     book_details = []
 
+    # 30% profit price calculation
     for item in ordered_books:
-        price_per_book = item.book.price * Decimal('1.3')  # if you want to include profit
+        price_per_book = item.book.price * Decimal("1.3")
         total_for_item = price_per_book * item.quantity
         books_total += total_for_item
 
-        # Add photo URL or default
-        photo_url = item.book.book_photo.url if item.book.book_photo else '/static/book_app/default-book.png'
+        photo_url = (
+            item.book.book_photo.url
+            if item.book.book_photo
+            else "/static/book_app/default-book.png"
+        )
 
         book_details.append({
             "title": item.book.book_title,
@@ -576,13 +662,61 @@ def success(request, payment_id):
             "quantity": item.quantity,
             "price_per_book": price_per_book,
             "total_for_item": total_for_item,
-            "photo_url": photo_url
+            "photo_url": photo_url,
         })
 
-    delivery_charges = payment.delivery_charges or 0
-    platform_fees = payment.platform_fees or 0
-    grand_total = books_total + Decimal(delivery_charges) + Decimal(platform_fees)
+    delivery_charges = Decimal(payment.delivery_charges or 0)
+    platform_fees = Decimal(payment.platform_fees or 0)
 
+    grand_total = books_total + delivery_charges + platform_fees
+
+    # ==========================================================
+    # 📄 GENERATE PDF RECEIPT
+    # ==========================================================
+    pdf_context = {
+        "payment": payment,
+        "ordered_books": book_details,
+        "books_total": books_total,
+        "delivery_charges": delivery_charges,
+        "platform_fees": platform_fees,
+        "grand_total": grand_total,
+    }
+
+    html = render_to_string("receipt.html", pdf_context)
+
+    pdf_file = BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=pdf_file)
+
+    if pisa_status.err:
+        print("PDF generation error")
+
+    pdf_file.seek(0)
+
+    # ==========================================================
+    # 📩 SEND EMAIL WITH PDF ATTACHMENT
+    # ==========================================================
+    subject = "Your Book Bazaar Order Receipt (PDF Attached)"
+    message = f"Hi {request.user.username},\n\nThank you for your purchase! Your receipt is attached.\n\n- Book Bazaar"
+
+    email = EmailMessage(
+        subject,
+        message,
+        from_email="Book Bazaar <{}>".format(payment.user.email),
+        to=[request.user.email],
+    )
+
+    # 📎 Attach PDF
+    email.attach(
+        filename=f"receipt_{payment.id}.pdf",
+        content=pdf_file.getvalue(),
+        mimetype="application/pdf"
+    )
+
+    email.send(fail_silently=False)
+
+    # ==========================================================
+    # RENDER SUCCESS PAGE
+    # ==========================================================
     context = {
         "payment": payment,
         "ordered_books": book_details,
@@ -593,7 +727,6 @@ def success(request, payment_id):
     }
 
     return render(request, "success.html", context)
-
 
 # ===========================
 #  AUTH EXTRA VIEWS
@@ -792,3 +925,34 @@ def download_receipt(request, payment_id):
 
 def checkout_success(request):
     return render(request, "checkout_success.html")
+
+
+from decimal import Decimal
+from .models import Transaction
+
+def create_transaction(book, buyer, payment):
+    seller = book.seller
+    selling_price = book.price
+
+    # Your fixed charges
+    delivery = Decimal("60")
+    platform_fee = Decimal("20")
+
+    # platform 30% model
+    platform_price = selling_price * Decimal("1.3")
+    profit_amount = platform_price - selling_price
+
+    # Final amount buyer paid
+    total_amount = selling_price + delivery + platform_fee
+
+    Transaction.objects.create(
+        buyer=buyer,
+        seller=seller,
+        book=book,
+        selling_price=selling_price,
+        delivery_charges=delivery,
+        platform_fees=platform_fee,
+        platform_price=platform_price,
+        profit_amount=profit_amount,
+        total_amount_paid=total_amount,
+    )

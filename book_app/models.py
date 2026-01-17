@@ -202,3 +202,27 @@ class OrderedBook(models.Model):
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)  # Add this field
+
+
+class Transaction(models.Model):
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="buyer_transactions")
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="seller_transactions")
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    # Original book selling price
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Fixed charges from the payment table
+    delivery_charges = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("60"))
+    platform_fees = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("20"))
+
+    # Platform takes 30% profit on book selling price
+    platform_price = models.DecimalField(max_digits=10, decimal_places=2)  
+    profit_amount = models.DecimalField(max_digits=10, decimal_places=2)   
+
+    total_amount_paid = models.DecimalField(max_digits=12, decimal_places=2) # selling + delivery + fees
+
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.book.book_title} - {self.buyer.username} → {self.seller.username}"
